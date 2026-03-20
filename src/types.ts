@@ -27,6 +27,7 @@ export interface Group {
   inviteCode: string    // random 8-char code e.g. "abc12xyz" — used in invite links
   createdAt: number
   updatedAt: number
+  isArchived?: boolean  // whether the group is archived (hidden from main active list)
 }
 
 // ── Expense ───────────────────────────────────────────────────

@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { useState } from 'react'
-import { Trash2, Edit2, AlertTriangle, X } from 'lucide-react'
+import { Trash2, Edit2, AlertTriangle, X, Image as ImageIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/store/useStore'
 import { deleteExpense } from '@/utils/firestoreService'
@@ -29,6 +29,7 @@ export function ExpenseCard({ expense, group, currentUserId, status }: ExpenseCa
   const navigate = useNavigate()
   const { usersCache } = useStore()
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showReceiptModal, setShowReceiptModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
   const payer = usersCache[expense.paidBy]
@@ -68,7 +69,18 @@ export function ExpenseCard({ expense, group, currentUserId, status }: ExpenseCa
 
           {/* Title + payer */}
           <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-medium truncate">{expense.title}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-white text-sm font-medium truncate">{expense.title}</p>
+              {expense.receiptUrl && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setShowReceiptModal(true) }} 
+                  className="text-slate-400 hover:text-white transition-colors flex-shrink-0"
+                  title="View Receipt"
+                >
+                  <ImageIcon size={14} />
+                </button>
+              )}
+            </div>
             <p className="text-slate-400 text-xs mt-0.5">
               {iPaid
                 ? <span className="text-green-400/70">You paid</span>
@@ -172,6 +184,33 @@ export function ExpenseCard({ expense, group, currentUserId, status }: ExpenseCa
                   'Yes, delete'
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Receipt Viewer Modal */}
+      {showReceiptModal && expense.receiptUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+            onClick={(e) => { e.stopPropagation(); setShowReceiptModal(false) }} 
+          />
+          <div className="relative max-w-2xl w-full bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl animate-slide-up">
+            <div className="absolute top-4 right-4 z-10">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowReceiptModal(false) }} 
+                className="bg-black/60 hover:bg-black p-2 rounded-full text-slate-300 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-2">
+              <img 
+                src={expense.receiptUrl} 
+                alt="Receipt" 
+                className="w-full h-auto max-h-[85vh] object-contain rounded-xl" 
+              />
             </div>
           </div>
         </div>

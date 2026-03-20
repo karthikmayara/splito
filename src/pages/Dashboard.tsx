@@ -13,7 +13,7 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, LogOut, User, Settings, TrendingUp, TrendingDown, Users } from 'lucide-react'
+import { Plus, LogOut, User, Settings, TrendingUp, TrendingDown, Users, Archive, ChevronDown, ChevronUp } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import { signOut, deleteAccount } from '@/hooks/useAuth'
 import {
@@ -35,6 +35,11 @@ export default function Dashboard() {
   // Key: groupId, Value: Expense[]
   const [allExpenses, setAllExpenses] = useState<Record<string, Expense[]>>({})
   const [allSettlements, setAllSettlements] = useState<Record<string, Settlement[]>>({})
+
+  const [showArchived, setShowArchived] = useState(false)
+
+  const activeGroups = groups.filter(g => !g.isArchived)
+  const archivedGroups = groups.filter(g => g.isArchived)
 
   // ── Subscribe to expenses for each group ─────────────────
   // We need expenses to calculate net balances shown on dashboard
@@ -149,16 +154,16 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {groups.length === 0 ? (
+          {activeGroups.length === 0 ? (
             // Empty state
             <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 text-center">
               <div className="text-4xl mb-3">🏠</div>
-              <p className="text-white font-medium mb-1">No groups yet</p>
+              <p className="text-white font-medium mb-1">No active groups yet</p>
               <p className="text-slate-400 text-sm">Create a group to start splitting expenses with your roommates</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {groups.map((group, i) => (
+              {activeGroups.map((group, i) => (
                 <GroupCard
                   key={group.id}
                   group={group}
@@ -169,6 +174,38 @@ export default function Dashboard() {
                   onClick={() => navigate(`/group/${group.id}`)}
                 />
               ))}
+            </div>
+          )}
+
+          {/* ── Archived Groups ──────────────────────────── */}
+          {archivedGroups.length > 0 && (
+            <div className="mt-8">
+              <button
+                onClick={() => setShowArchived(!showArchived)}
+                className="flex items-center justify-between w-full text-left bg-slate-800/30 border border-slate-700/30 rounded-xl p-4 transition-colors hover:bg-slate-800/50"
+              >
+                <div className="flex items-center gap-2">
+                  <Archive size={16} className="text-slate-400" />
+                  <span className="text-slate-300 font-medium">Archived Groups ({archivedGroups.length})</span>
+                </div>
+                {showArchived ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+              </button>
+              
+              {showArchived && (
+                <div className="mt-3 space-y-3">
+                  {archivedGroups.map((group, i) => (
+                    <GroupCard
+                      key={group.id}
+                      group={group}
+                      expenses={allExpenses[group.id] || []}
+                      settlements={allSettlements[group.id] || []}
+                      currentUserId={currentUser!.id}
+                      animationDelay={i * 50}
+                      onClick={() => navigate(`/group/${group.id}`)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -14,7 +14,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronDown } from 'lucide-react'
 import { useStore } from '@/store/useStore'
-import { addExpense, getUsers } from '@/utils/firestoreService'
+import { addExpense, getUsers, uploadReceiptImage } from '@/utils/firestoreService'
 import {
   calculateEqualSplit,
   calculatePercentageSplit,
@@ -44,6 +44,7 @@ export default function AddExpense() {
   const [notes, setNotes] = useState('')
   const [category, setCategory] = useState<ExpenseCategory>('Other')
   const [userManuallyPickedCategory, setUserManuallyPickedCategory] = useState(false)
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
 
   // Auto-guess category as user types, unless they manually picked one
   useEffect(() => {
@@ -141,6 +142,11 @@ export default function AddExpense() {
     setSaving(true)
     if (!group) return
     try {
+      let receiptUrl = undefined
+      if (receiptFile) {
+        receiptUrl = await uploadReceiptImage(receiptFile, group.id)
+      }
+
       await addExpense({
         groupId: group.id,
         title: title.trim(),
@@ -151,6 +157,7 @@ export default function AddExpense() {
         date: new Date(date).getTime(),
         notes: notes.trim(),
         category,
+        receiptUrl,
         createdBy: currentUser!.id,
       })
       navigate(`/group/${groupId}`)
@@ -431,6 +438,17 @@ export default function AddExpense() {
             rows={2}
             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 transition-colors resize-none"
             maxLength={200}
+          />
+        </div>
+
+        {/* ── Receipt Photo ────────────────────────────────────── */}
+        <div>
+          <label className="text-slate-400 text-sm block mb-1.5">Receipt (optional)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={e => setReceiptFile(e.target.files?.[0] || null)}
+            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-700 file:text-slate-300 hover:file:bg-slate-600"
           />
         </div>
 

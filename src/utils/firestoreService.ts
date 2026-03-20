@@ -10,10 +10,11 @@
 import {
   collection, doc, getDoc, getDocs, addDoc,
   updateDoc, deleteDoc, query, where, orderBy,
-  onSnapshot, serverTimestamp, Timestamp,
+  onSnapshot, serverTimestamp, Timestamp, writeBatch,
   type Unsubscribe,
 } from 'firebase/firestore'
-import { db } from '@/firebase'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { db, storage } from '@/firebase'
 import type { Group, Expense, User, Settlement } from '@/types'
 
 // ── Helper: generate random invite code ──────────────────────
@@ -162,9 +163,27 @@ export async function joinGroup(groupId: string, userId: string): Promise<void> 
   })
 }
 
+// Archive or unarchive a group
+export async function toggleGroupArchive(groupId: string, isArchived: boolean): Promise<void> {
+  const ref = doc(db, 'groups', groupId)
+  await updateDoc(ref, {
+    isArchived,
+    updatedAt: serverTimestamp(),
+  })
+}
+
 // ═══════════════════════════════════════════════════════════
-// EXPENSES
+// EXPENSES & RECEIPTS
 // ═══════════════════════════════════════════════════════════
+
+// Upload a receipt photo to Firebase Storage and return its URL
+export async function uploadReceiptImage(file: File, groupId: string): Promise<string> {
+  const fileExt = file.name.split('.').pop()
+  const fileName = `receipts/${groupId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`
+  const storageRef = ref(storage, fileName)
+  const snapshot = await uploadBytes(storageRef, file)
+  return await getDownloadURL(snapshot.ref)
+}
 
 // Add a new expense to a group
 export async function addExpense(
@@ -225,6 +244,26 @@ export function subscribeToGroupExpenses(
 // Delete an expense (only the creator should be able to do this)
 export async function deleteExpense(expenseId: string): Promise<void> {
   await deleteDoc(doc(db, 'expenses', expenseId))
+}
+
+// Delete a group and all its expenses/settlements
+export async function deleteGroupAndContents(groupId: string): Promise<void> {
+  const batch = writeBatch(db)
+  
+  // 1. Delete all expenses
+  const expensesQuery = query(collection(db, 'expenses'), where('groupId', '==', groupId))
+  const expensesSnap = await getDocs(expensesQuery)
+  expensesSnap.forEach(docSnap => batch.delete(docSnap.ref))
+
+  // 2. Delete all settlements
+  const settlementsQuery = query(collection(db, 'settlements'), where('groupId', '==', groupId))
+  const settlementsSnap = await getDocs(settlementsQuery)
+  settlementsSnap.forEach(docSnap => batch.delete(docSnap.ref))
+
+  // 3. Delete the group itself
+  batch.delete(doc(db, 'groups', groupId))
+
+  await batch.commit()
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -13,7 +13,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Plus, Share2,
-  Receipt, UserCheck, Copy, Check, ChevronRight
+  Receipt, UserCheck, Copy, Check, ChevronRight, Download, Trash2
 } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import {
@@ -21,12 +21,15 @@ import {
   subscribeToGroupSettlements,
   getUsers,
   checkGroupAccess,
+  toggleGroupArchive,
+  deleteGroupAndContents,
 } from '@/utils/firestoreService'
 import {
   minimizeDebts,
   formatAmount,
   computeExpenseStatuses,
 } from '@/utils/splitCalculator'
+import { exportGroupToCSV } from '@/utils/exportUtils'
 import {
   buildWhatsAppShareLink,
   buildSmsShareLink,
@@ -57,6 +60,8 @@ export default function GroupDetail() {
   const [debts, setDebts] = useState<Debt[]>([])
   const [settleDebt, setSettleDebt] = useState<Debt | null>(null) // debt being settled
   const [showInvite, setShowInvite] = useState(false)
+  const [showDeleteGroupModal, setShowDeleteGroupModal] = useState(false)
+  const [deletingGroup, setDeletingGroup] = useState(false)
   const [activeTab, setActiveTab] = useState<'expenses' | 'settled' | 'balances'>('expenses')
   const [accessState, setAccessState] = useState<'check' | 'not-found' | 'denied'>('check')
 
@@ -164,10 +169,24 @@ export default function GroupDetail() {
           >
             <ArrowLeft size={18} />
           </button>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 flex items-center gap-2">
             <h1 className="text-white font-semibold truncate">{group.name}</h1>
+            {group.isArchived && (
+              <span className="bg-slate-700 text-slate-300 text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wider">
+                Archived
+              </span>
+            )}
+          </div>
+          <div className="hidden sm:block">
             <p className="text-slate-500 text-xs">{group.members.length} members</p>
           </div>
+          <button
+            onClick={() => exportGroupToCSV(group, expenses, usersCache)}
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            title="Export to CSV"
+          >
+            <Download size={18} />
+          </button>
           <button
             onClick={() => setShowInvite(true)}
             className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
@@ -293,6 +312,16 @@ export default function GroupDetail() {
         )}
       </div>
 
+      <div className="max-w-lg mx-auto px-4 mt-8 pb-32">
+        <button
+          onClick={() => setShowDeleteGroupModal(true)}
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 transition-colors text-sm font-medium"
+        >
+          <Trash2 size={16} />
+          Delete Group
+        </button>
+      </div>
+
       {/* ── FAB: Add expense ─────────────────────────── */}
       <button
         onClick={() => navigate(`/group/${groupId}/add-expense`)}
@@ -326,6 +355,50 @@ export default function GroupDetail() {
           inviterName={currentUser?.name || 'Someone'}
           onClose={() => setShowInvite(false)}
         />
+      )}
+
+      {/* ── Delete Group Modal ───────────────────────── */}
+      {showDeleteGroupModal && (
+        <ModalOverlay onClose={() => !deletingGroup && setShowDeleteGroupModal(false)}>
+           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 text-red-400 mb-4 mx-auto">
+             <Trash2 size={24} />
+           </div>
+           <h2 className="text-white font-semibold text-lg mb-2 text-center">Delete Group</h2>
+           <p className="text-slate-400 text-sm mb-6 text-center">
+             Are you sure you want to delete <strong className="text-slate-300">{group.name}</strong>? This will permanently delete all expenses and settlements. This action cannot be undone.
+           </p>
+           <div className="flex gap-3">
+             <button
+               onClick={() => setShowDeleteGroupModal(false)}
+               disabled={deletingGroup}
+               className="flex-1 py-2.5 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors text-sm font-medium"
+             >
+               Cancel
+             </button>
+             <button
+               onClick={async () => {
+                 setDeletingGroup(true)
+                 try {
+                   await deleteGroupAndContents(group.id)
+                   navigate('/')
+                 } catch (err) {
+                   console.error(err)
+                   alert("Failed to delete group")
+                   setDeletingGroup(false)
+                   setShowDeleteGroupModal(false)
+                 }
+               }}
+               disabled={deletingGroup}
+               className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium transition-colors text-sm disabled:opacity-50 flex items-center justify-center"
+             >
+               {deletingGroup ? (
+                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+               ) : (
+                 'Delete forever'
+               )}
+             </button>
+           </div>
+        </ModalOverlay>
       )}
     </div>
   )
@@ -459,7 +532,18 @@ function BalancesTab({
       <div className="text-center py-12">
         <UserCheck size={32} className="text-green-500 mx-auto mb-3" />
         <p className="text-white font-medium">All settled up! 🎉</p>
-        <p className="text-slate-400 text-sm mt-1">No outstanding balances in this group</p>
+        <p className="text-slate-400 text-sm mt-1 mb-8">No outstanding balances in this group</p>
+        
+        <button
+          onClick={async () => {
+            if (confirm(`Are you sure you want to ${group.isArchived ? 'unarchive' : 'archive'} this group?`)) {
+              await toggleGroupArchive(group.id, !group.isArchived)
+            }
+          }}
+          className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium px-5 py-2.5 rounded-xl transition-colors border border-slate-700 mx-auto inline-flex"
+        >
+          {group.isArchived ? 'Unarchive Group' : 'Archive Group'}
+        </button>
       </div>
     )
   }

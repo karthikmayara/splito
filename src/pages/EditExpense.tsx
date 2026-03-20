@@ -7,9 +7,9 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ChevronDown, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, ChevronDown, AlertTriangle, X } from 'lucide-react'
 import { useStore } from '@/store/useStore'
-import { updateExpense, getUsers } from '@/utils/firestoreService'
+import { updateExpense, getUsers, uploadReceiptImage } from '@/utils/firestoreService'
 import {
   calculateEqualSplit,
   calculatePercentageSplit,
@@ -41,6 +41,9 @@ export default function EditExpense() {
   const [notes, setNotes] = useState('')
   const [category, setCategory] = useState<ExpenseCategory>('Other')
   const [userManuallyPickedCategory, setUserManuallyPickedCategory] = useState(false)
+
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
+  const [existingReceiptUrl, setExistingReceiptUrl] = useState<string | undefined>()
 
   const [percentages, setPercentages] = useState<Record<string, string>>({})
   const [exactAmounts, setExactAmounts] = useState<Record<string, string>>({})
@@ -74,6 +77,7 @@ export default function EditExpense() {
     setNotes(expenseToEdit.notes || '')
     setCategory(expenseToEdit.category || 'Other')
     setUserManuallyPickedCategory(true) // editing shouldn't auto-guess over established categories
+    setExistingReceiptUrl(expenseToEdit.receiptUrl)
 
     if (expenseToEdit.splitType === 'percentage') {
       const pcts: Record<string, string> = {}
@@ -173,6 +177,11 @@ export default function EditExpense() {
     if (!group || !expenseId) return
     
     try {
+      let receiptUrl = existingReceiptUrl
+      if (receiptFile) {
+        receiptUrl = await uploadReceiptImage(receiptFile, group.id)
+      }
+
       await updateExpense(expenseId, group.id, {
         title: title.trim(),
         totalCents: totalCents!,
@@ -182,6 +191,7 @@ export default function EditExpense() {
         date: new Date(date).getTime(),
         notes: notes.trim(),
         category,
+        receiptUrl,
       })
       navigate(`/group/${groupId}`)
     } catch (err) {
@@ -462,6 +472,29 @@ export default function EditExpense() {
             rows={2}
             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 transition-colors resize-none"
             maxLength={200}
+          />
+        </div>
+
+        {/* ── Receipt Photo ────────────────────────────────────── */}
+        <div>
+          <label className="text-slate-400 text-sm block mb-1.5">Receipt (optional)</label>
+          {existingReceiptUrl && !receiptFile && (
+            <div className="mb-3 relative w-24 h-24 rounded-lg overflow-hidden border border-slate-700">
+              <img src={existingReceiptUrl} alt="Receipt" className="w-full h-full object-cover" />
+              <button 
+                onClick={() => setExistingReceiptUrl(undefined)} 
+                className="absolute top-1 right-1 bg-black/60 hover:bg-black p-1 rounded-full text-slate-300 hover:text-white transition-colors"
+                title="Remove photo"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={e => setReceiptFile(e.target.files?.[0] || null)}
+            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-700 file:text-slate-300 hover:file:bg-slate-600"
           />
         </div>
 
