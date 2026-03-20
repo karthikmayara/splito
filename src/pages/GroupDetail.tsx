@@ -312,15 +312,17 @@ export default function GroupDetail() {
         )}
       </div>
 
-      <div className="max-w-lg mx-auto px-4 mt-8 pb-32">
-        <button
-          onClick={() => setShowDeleteGroupModal(true)}
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 transition-colors text-sm font-medium"
-        >
-          <Trash2 size={16} />
-          Delete Group
-        </button>
-      </div>
+      {currentUser?.id === group.createdBy && (
+        <div className="max-w-lg mx-auto px-4 mt-8 pb-32">
+          <button
+            onClick={() => setShowDeleteGroupModal(true)}
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 transition-colors text-sm font-medium"
+          >
+            <Trash2 size={16} />
+            Delete Group
+          </button>
+        </div>
+      )}
 
       {/* ── FAB: Add expense ─────────────────────────── */}
       <button

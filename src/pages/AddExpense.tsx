@@ -157,8 +157,8 @@ export default function AddExpense() {
         date: new Date(date).getTime(),
         notes: notes.trim(),
         category,
-        receiptUrl,
         createdBy: currentUser!.id,
+        ...(receiptUrl ? { receiptUrl } : {})
       })
       navigate(`/group/${groupId}`)
     } catch (err) {
@@ -269,6 +269,9 @@ export default function AddExpense() {
                 onClick={() => {
                   setCategory(cat)
                   setUserManuallyPickedCategory(true)
+                  // Auto-fill title if clicked
+                  setTitle(cat)
+                  setErrors(prev => ({ ...prev, title: '' }))
                 }}
                 className={`
                   flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm whitespace-nowrap transition-colors

@@ -10,7 +10,7 @@
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useStore } from '@/store/useStore'
-import { signInWithGoogle, signUpWithEmail, loginWithEmail } from '@/hooks/useAuth'
+import { signInWithGoogle, signUpWithEmail, loginWithEmail, resetPassword } from '@/hooks/useAuth'
 
 export default function Login() {
   const { currentUser, authLoading } = useStore()
@@ -18,7 +18,8 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null)
 
   // Email Auth State
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
+  // Email Auth State
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -43,7 +44,8 @@ export default function Login() {
 
   async function handleEmailAuth(e: React.FormEvent) {
     e.preventDefault()
-    if (!email || !password) return
+    if (!email) return
+    if (mode !== 'forgot' && !password) return
     if (mode === 'signup' && !name) {
       setError('Please enter your name.')
       return
@@ -54,8 +56,14 @@ export default function Login() {
     try {
       if (mode === 'signup') {
         await signUpWithEmail(name, email, password)
-      } else {
+      } else if (mode === 'login') {
         await loginWithEmail(email, password)
+      } else if (mode === 'forgot') {
+        await resetPassword(email)
+        setError('Password reset email sent! Check your inbox.')
+        setIsSigningIn(false)
+        setMode('login')
+        return
       }
     } catch (err: any) {
       console.error('Auth error code:', err.code)
@@ -130,21 +138,34 @@ export default function Login() {
             className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50 transition-colors"
             required
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50 transition-colors"
-            required
-            minLength={6}
-          />
+          {mode !== 'forgot' && (
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50 transition-colors"
+              required
+              minLength={6}
+            />
+          )}
+          {mode === 'login' && (
+            <div className="flex justify-end mt-1 mb-3">
+              <button
+                type="button"
+                onClick={() => { setMode('forgot'); setError(null) }}
+                className="text-xs text-slate-400 hover:text-slate-300 transition-colors"
+              >
+                Forgot your password?
+              </button>
+            </div>
+          )}
           <button
             type="submit"
             disabled={isSigningIn}
-            className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
           >
-            {isSigningIn ? 'Please wait...' : (mode === 'login' ? 'Log In' : 'Sign Up')}
+            {isSigningIn ? 'Please wait...' : (mode === 'login' ? 'Log In' : mode === 'signup' ? 'Sign Up' : 'Send Reset Link')}
           </button>
         </form>
 
@@ -182,20 +203,34 @@ export default function Login() {
         </button>
 
         {/* Toggle Mode */}
-        <div className="mt-5 text-center text-sm">
-          <span className="text-slate-400">
-            {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
-          </span>
-          <button
-            onClick={() => {
-              setMode(mode === 'login' ? 'signup' : 'login')
-              setError(null)
-            }}
-            className="text-green-400 hover:text-green-300 font-medium transition-colors"
-          >
-            {mode === 'login' ? 'Sign Up' : 'Log In'}
-          </button>
-        </div>
+        {mode !== 'forgot' ? (
+          <div className="mt-5 text-center text-sm">
+            <span className="text-slate-400">
+              {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
+            </span>
+            <button
+              onClick={() => {
+                setMode(mode === 'login' ? 'signup' : 'login')
+                setError(null)
+              }}
+              className="text-green-400 hover:text-green-300 font-medium transition-colors"
+            >
+              {mode === 'login' ? 'Sign Up' : 'Log In'}
+            </button>
+          </div>
+        ) : (
+          <div className="mt-5 text-center text-sm">
+            <button
+              onClick={() => {
+                setMode('login')
+                setError(null)
+              }}
+              className="text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-1 mx-auto"
+            >
+              ← Back to login
+            </button>
+          </div>
+        )}
 
         {/* Error message */}
         {error && (

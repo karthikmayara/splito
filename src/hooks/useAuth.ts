@@ -24,6 +24,7 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
   deleteUser,
+  sendPasswordResetEmail,
 } from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore'
 import { auth, googleProvider, db } from '@/firebase'
@@ -129,6 +130,10 @@ export async function signUpWithEmail(name: string, email: string, pass: string)
 
 export async function loginWithEmail(email: string, pass: string): Promise<void> {
   await signInWithEmailAndPassword(auth, email, pass)
+}
+
+export async function resetPassword(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email)
 }
 
 // ── Sign out ──────────────────────────────────────────────────
