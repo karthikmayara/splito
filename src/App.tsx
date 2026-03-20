@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useStore } from '@/store/useStore'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { PwaInstallBanner } from '@/components/PwaInstallBanner'
+import { InstallPrompt } from '@/components/InstallPrompt'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import GroupDetail from '@/pages/GroupDetail'
@@ -40,7 +40,7 @@ export default function App() {
     // ErrorBoundary wraps everything — catches any unhandled render error
     <ErrorBoundary>
       {/* PWA install prompt — shown on all pages, appears immediately */}
-      <PwaInstallBanner />
+      <InstallPrompt />
       <BrowserRouter basename="/splito">
         <Routes>
           <Route path="/login" element={<Login />} />
