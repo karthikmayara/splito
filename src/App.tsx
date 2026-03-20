@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useGlobalData } from '@/hooks/useGlobalData'
 import { useStore } from '@/store/useStore'
@@ -43,7 +43,7 @@ export default function App() {
     <ErrorBoundary>
       {/* PWA install prompt — shown on all pages, appears immediately */}
       <InstallPrompt />
-      <BrowserRouter basename="/splito">
+      <HashRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/join/:inviteCode" element={<JoinGroup />} />
@@ -57,7 +57,7 @@ export default function App() {
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </ErrorBoundary>
   )
 }
