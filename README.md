@@ -6,7 +6,7 @@
 
 **Free forever · No app download · Works on any device**
 
-[Live App](https://github.com/karthikmayara/splito) · [Report a Bug](https://github.com/karthikmayara/splito/issues) · [Request a Feature](https://github.com/karthikmayara/splito/issues)
+[Live App](https://karthikmayara.github.io/splito/) · [Report a Bug](https://github.com/karthikmayara/splito/issues) · [Request a Feature](https://github.com/karthikmayara/splito/issues)
 
 </div>
 
