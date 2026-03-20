@@ -1,0 +1,90 @@
+/* ─────────────────────────────────────────────────────────────
+   main.css — Global styles
+   Tailwind utilities handle most styling.
+   This file only has things Tailwind can't do easily.
+───────────────────────────────────────────────────────────── */
+
+/* Import Tailwind's base reset, component classes, and utility classes */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ──────────────────────────────────────────────────── */
+@layer base {
+  /* Set dark background globally — our app is dark-themed */
+  html, body, #root {
+    @apply bg-[#0f172a] text-slate-100 min-h-screen;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    /* Prevent layout shift from scrollbar appearing/disappearing */
+    scrollbar-gutter: stable;
+  }
+
+  /* Smooth scrolling app-wide */
+  * {
+    scroll-behavior: smooth;
+    box-sizing: border-box;
+  }
+
+  /* Money amounts use monospace font for better alignment */
+  .amount {
+    font-family: 'DM Mono', monospace;
+  }
+}
+
+/* ── Custom Scrollbar ──────────────────────────────────────── */
+/* Make scrollbars match the dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* ── Animations ────────────────────────────────────────────── */
+/* Fade in from below — used for cards and modals appearing */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.25s ease-out forwards;
+}
+
+/* Stagger children animations — add delay per index */
+.animate-slide-up:nth-child(1) { animation-delay: 0ms; }
+.animate-slide-up:nth-child(2) { animation-delay: 50ms; }
+.animate-slide-up:nth-child(3) { animation-delay: 100ms; }
+.animate-slide-up:nth-child(4) { animation-delay: 150ms; }
+.animate-slide-up:nth-child(5) { animation-delay: 200ms; }
+
+/* Pulse skeleton loader for loading states */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #1e293b 25%,
+    #2d3f55 50%,
+    #1e293b 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
