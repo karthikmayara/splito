@@ -6,9 +6,7 @@
 
 **Free forever · No app download · Works on any device**
 
-[![Deploy to GitHub Pages](https://github.com/YOUR_USERNAME/splito/actions/workflows/deploy.yml/badge.svg)](https://github.com/YOUR_USERNAME/splito/actions/workflows/deploy.yml)
-
-[Live App](https://YOUR_USERNAME.github.io/splito/) · [Report a Bug](https://github.com/YOUR_USERNAME/splito/issues) · [Request a Feature](https://github.com/YOUR_USERNAME/splito/issues)
+[Live App](https://github.com/karthikmayara/splito) · [Report a Bug](https://github.com/karthikmayara/splito/issues) · [Request a Feature](https://github.com/karthikmayara/splito/issues)
 
 </div>
 
