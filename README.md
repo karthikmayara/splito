@@ -1,221 +1,125 @@
-# 💸 Splito — Roommate Expense Splitter
+<div align="center">
 
-> Split expenses fairly with roommates. Pay instantly via UPI — PhonePe, Google Pay, Paytm, BHIM.
+# 💸 Splito
+
+### Split expenses with roommates. Pay instantly via UPI.
+
+**Free forever · No app download · Works on any device**
 
 [![Deploy to GitHub Pages](https://github.com/YOUR_USERNAME/splito/actions/workflows/deploy.yml/badge.svg)](https://github.com/YOUR_USERNAME/splito/actions/workflows/deploy.yml)
 
-**Live app:** https://YOUR_USERNAME.github.io/splito
+[Live App](https://YOUR_USERNAME.github.io/splito/) · [Report a Bug](https://github.com/YOUR_USERNAME/splito/issues) · [Request a Feature](https://github.com/YOUR_USERNAME/splito/issues)
+
+</div>
+
+---
+
+## What is Splito?
+
+Splito is a **Progressive Web App** for splitting shared expenses with roommates, flat-mates, and travel groups. Add an expense, split it however you want, and pay your share in one tap via UPI — no account needed for the person receiving money, no app download required for anyone.
+
+Built specifically for **India-first usage** with UPI at its core, but works globally with USD, EUR, and GBP support too.
+
+---
+
+## How Splito is different
+
+Most expense splitter apps were built for the US market. Splitwise requires a paid subscription for basic features. Tricount has no payment links. None of them support UPI natively.
+
+Splito is different in four ways:
+
+**1. One-tap UPI payments**
+When you owe someone money, tap Pay. Your phone opens PhonePe, Google Pay, or Paytm with the amount and recipient already filled in. No copy-pasting UPI IDs, no manual entry. One `upi://pay` deep link works across every UPI app — the OS asks which one to use.
+
+**2. Decimal-precise splits down to the paisa**
+Most apps round splits to the nearest rupee. Splito splits to the paisa using integer arithmetic (no floating point errors). ₹100 split 3 ways = ₹33.34, ₹33.33, ₹33.33 — the extra paisa is assigned transparently using the largest-remainder method.
+
+**3. Debt minimization algorithm**
+10 expenses don't create 10 separate payments. Splito's algorithm collapses all outstanding debts into the minimum number of transfers needed to fully settle a group. A group of 5 people with 20 expenses might only need 4 payments total.
+
+**4. No app download required**
+Splito is a PWA — it runs in the browser and can be installed directly to the home screen from Chrome or Safari. Invite roommates via WhatsApp or SMS with a single link. They open the link, sign in with Google, and they're in the group immediately.
 
 ---
 
 ## Features
 
-- 🔐 **Google + Email/Password auth** — sign in instantly
-- 👥 **Multiple groups** — separate groups for flat, trips, office
-- 💰 **3 split types** — equal, by percentage, or exact amounts
-- 🪙 **Decimal-precise math** — splits calculated in paise, never floats
-- 📊 **Debt minimization** — collapses 20 expenses into the fewest possible transfers
-- 💳 **UPI deep links** — one tap opens PhonePe / GPay / Paytm pre-filled
-- 🤝 **Settlement tracking** — mark debts as paid, balances update instantly
-- 📱 **PWA** — installable on Android and iOS, works offline
-- 🔗 **Invite via WhatsApp or SMS** — no app download required to join
-- 📂 **3-tab group view** — Expenses (red/amber/green status), Settled, Balances
-- 📈 **Spending summary** — per-person breakdown and category chart
-- 🗂️ **Expense categories** — Food, Rent, Utilities, Transport, and more
+### Expense management
+- Equal, percentage, or exact amount splits
+- 8 expense categories with auto-detection from title
+- Edit and delete expenses with recalculation
+- Notes and date tracking per expense
+
+### Groups & balances
+- Multiple groups (flat expenses, trip expenses, etc.)
+- Real-time balance updates across all members
+- 3-tab view: Expenses · Settled · Balances
+- Color-coded expense status — red (unpaid), amber (partial), green (settled)
+- Group spending summary with per-person and category breakdown
+
+### Payments
+- UPI deep links — PhonePe, Google Pay, Paytm, BHIM
+- Cash payment recording
+- Settlement tracking with delete + revert
+- Automatic balance recalculation on settlement
+
+### Sharing & invites
+- Invite via WhatsApp or SMS
+- Join via link — no app download needed
+- Works on any device with a browser
+
+### Technical
+- Works offline — Firestore IndexedDB caching
+- Installable PWA — add to home screen
+- Real-time sync across all group members
+- Google + Email/Password authentication
+- Firebase free tier — handles hundreds of users at zero cost
 
 ---
 
-## Tech Stack
+## Roadmap
+
+These features are planned for upcoming releases:
+
+| Feature | Status |
+|---|---|
+| Receipt photo upload | Planned |
+| Export to PDF / CSV | Planned |
+| Group archiving | Planned |
+| Spending charts (monthly, category) | Planned |
+| Recurring expenses (monthly rent, WiFi) | Planned |
+| Multi-currency per expense | Planned |
+| Push notifications | Planned |
+
+---
+
+## Tech stack
 
 | Layer | Technology |
 |---|---|
 | Frontend | React 18 + TypeScript + Vite |
 | Styling | Tailwind CSS |
 | State | Zustand |
-| Database | Firebase Firestore (real-time) |
-| Auth | Firebase Authentication |
+| Database | Firebase Firestore |
+| Auth | Firebase Auth (Google + Email/Password) |
 | Hosting | GitHub Pages |
 | PWA | vite-plugin-pwa |
 
 ---
 
-## Local Development
+## Key technical decisions
 
-### Prerequisites
-- Node.js 20+ — https://nodejs.org
-- Git — https://git-scm.com
-- Firebase account — https://console.firebase.google.com (free)
+**Money stored as integers**
+All amounts are stored in paise (smallest currency unit). ₹450.50 is stored as `45050`. This eliminates floating point errors entirely — `0.1 + 0.2` in JavaScript gives `0.30000000000000004`, which is unacceptable for financial data.
 
-### 1. Firebase Setup
+**No backend server**
+Firebase Firestore Security Rules replace a traditional auth middleware layer. Rules run on Google's servers and cannot be bypassed from the browser. The entire app runs on Firebase's free tier.
 
-1. Go to https://console.firebase.google.com → **Create project** → name it `splito`
-2. **Authentication** → Get Started → Sign-in method → Enable **Google** and **Email/Password**
-3. **Firestore Database** → Create database → **Start in production mode** → region `asia-south1`
-4. **Project Settings** (gear icon) → **Add app** → Web `</>` → register as `splito-web`
-5. Copy the `firebaseConfig` values shown
+**Offline first**
+Firestore's `persistentLocalCache` with `persistentMultipleTabManager` caches all reads to IndexedDB. Users can view their groups and expenses without internet. Writes are queued and synced automatically on reconnect.
 
-### 2. Firestore Indexes
-
-Create these composite indexes in Firebase Console → Firestore → Indexes:
-
-| Collection | Fields | Order |
-|---|---|---|
-| `groups` | `members` (Array) + `updatedAt` | Descending |
-| `expenses` | `groupId` (Asc) + `date` | Descending |
-| `settlements` | `groupId` (Asc) + `createdAt` | Descending |
-
-### 3. Install and Run
-
-```bash
-git clone https://github.com/YOUR_USERNAME/splito.git
-cd splito
-npm install
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env and fill in your Firebase config values
-
-npm run dev
-# → http://localhost:5173
-```
-
-### 4. Deploy Firestore Security Rules
-
-```bash
-npm install -g firebase-tools
-firebase login
-firebase use splito-app-XXXXX   # your project ID
-firebase deploy --only firestore:rules
-```
-
----
-
-## GitHub Pages Deployment
-
-Every push to `main` automatically deploys via GitHub Actions.
-
-### Setup (one time only)
-
-**Step 1 — Enable GitHub Pages:**
-- Repo → Settings → Pages → Source → **GitHub Actions** → Save
-
-**Step 2 — Add Firebase secrets:**
-- Repo → Settings → Secrets and variables → Actions
-- Add these 6 secrets:
-
-| Secret name | Where to find it |
-|---|---|
-| `VITE_FIREBASE_API_KEY` | Firebase Project Settings → Your apps → SDK config |
-| `VITE_FIREBASE_AUTH_DOMAIN` | same |
-| `VITE_FIREBASE_PROJECT_ID` | same |
-| `VITE_FIREBASE_STORAGE_BUCKET` | same |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | same |
-| `VITE_FIREBASE_APP_ID` | same |
-
-**Step 3 — Add GitHub Pages domain to Firebase:**
-- Firebase Console → Authentication → Settings → Authorized domains
-- Add: `YOUR_USERNAME.github.io`
-
-**Step 4 — Push to deploy:**
-```bash
-git add .
-git commit -m "initial commit"
-git push origin main
-```
-
-App goes live at `https://YOUR_USERNAME.github.io/splito` in ~2 minutes.
-
----
-
-## Project Structure
-
-```
-splito/
-├── public/
-│   ├── manifest.json        # PWA manifest
-│   ├── icon-192.png         # App icon
-│   ├── icon-512.png         # App icon
-│   └── 404.html             # GitHub Pages SPA routing fix
-├── src/
-│   ├── types.ts             # All TypeScript types + CATEGORY_META
-│   ├── firebase.ts          # Firebase init + offline persistence
-│   ├── main.tsx             # React entry point
-│   ├── App.tsx              # Routing + ErrorBoundary + PWA prompt
-│   ├── main.css             # Global styles + animations
-│   ├── vite-env.d.ts
-│   ├── components/
-│   │   ├── CategoryPicker.tsx   # Expense category selector
-│   │   ├── ErrorBoundary.tsx    # Crash recovery screen
-│   │   ├── ExpenseCard.tsx      # Expense row with status colors
-│   │   ├── GroupSummary.tsx     # Spending breakdown header
-│   │   ├── PwaInstallBanner.tsx # "Add to Home Screen" prompt
-│   │   ├── SettlementCard.tsx   # Settlement row with delete
-│   │   ├── SettleUpSheet.tsx    # UPI payment bottom sheet
-│   │   └── ui.tsx               # Shared UI primitives
-│   ├── hooks/
-│   │   ├── useAuth.ts           # Firebase auth listener
-│   │   ├── useClipboard.ts      # Copy with timed feedback
-│   │   └── useGroupData.ts      # Group + expense subscriptions
-│   ├── pages/
-│   │   ├── Login.tsx            # Google + email/password auth
-│   │   ├── Dashboard.tsx        # Groups list + net balance
-│   │   ├── GroupDetail.tsx      # 3-tab group view
-│   │   ├── AddExpense.tsx       # Add expense form
-│   │   ├── EditExpense.tsx      # Edit expense form
-│   │   └── JoinGroup.tsx        # Invite link handler
-│   ├── store/
-│   │   └── useStore.ts          # Zustand global state
-│   └── utils/
-│       ├── firestoreService.ts  # All Firestore read/write
-│       ├── paymentLinks.ts      # UPI / WhatsApp link builders
-│       └── splitCalculator.ts  # Integer math + debt minimization
-├── .env.example             # Environment variable template
-├── .github/workflows/
-│   └── deploy.yml           # GitHub Actions CI/CD
-├── firestore.rules          # Firestore security rules
-├── firebase.json            # Firebase hosting config
-├── vite.config.ts
-├── tailwind.config.js
-└── tsconfig.json
-```
-
----
-
-## Key Design Decisions
-
-### Money is always integers (paise)
-Never store `450.50`. Always store `45050`. Avoids `0.1 + 0.2 = 0.30000000000000004`. Only convert to display strings at render time.
-
-### Debt minimization algorithm
-10 expenses in a 4-person group could theoretically require 30 payments to settle. The greedy net-balance algorithm collapses all debts into the minimum number of transfers — typically 2-3.
-
-### UPI covers all Indian payment apps
-One `upi://pay?pa=id@bank&am=450.50&cu=INR` link opens whichever UPI app the user has installed — PhonePe, Google Pay, Paytm, BHIM, or any other. No separate integrations needed.
-
-### No backend server
-Firebase Firestore + Security Rules replaces a traditional backend entirely. Real-time sync, auth, and access control — all handled by Firebase at zero cost on the free tier.
-
-### Expense status uses net balance, not FIFO
-An expense is marked "settled" only when the debtor has paid off their entire outstanding balance to that creditor across all expenses — not just the amount for one specific expense. This is conservative and honest: a debt isn't truly settled until everything owed is covered.
-
-### Backward compatibility for categories
-Older expenses in Firestore have no `category` field. All render paths use `expense.category ?? 'other'` so legacy documents display correctly without any database migration.
-
----
-
-## Environment Variables
-
-```bash
-# .env — copy from .env.example and fill in your values
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-VITE_FIREBASE_STORAGE_BUCKET=
-VITE_FIREBASE_MESSAGING_SENDER_ID=
-VITE_FIREBASE_APP_ID=
-```
-
-All variables must start with `VITE_` to be accessible in the browser via `import.meta.env`.
+**UPI protocol**
+UPI is a protocol, not an app. `upi://pay?pa=handle@bank&am=450.50&cu=INR` opens any UPI-compatible app on the device. One link covers PhonePe, GPay, Paytm, BHIM, and every other UPI client — no app-specific integrations needed.
 
 ---
 
