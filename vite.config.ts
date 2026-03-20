@@ -1,35 +1,34 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
-// Vite configuration
-// - React plugin enables JSX transform and Fast Refresh in dev
-// - Path alias @/ maps to src/ so imports are clean: "@/utils/..." instead of "../../utils/..."
 export default defineConfig({
-  plugins: [
-    react(),
-    VitePWA({
-      registerType: 'prompt',
-      manifest: false, // relying on existing HTML manifest
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
-      }
-    })
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
-  // Base URL for GitHub Pages deployment
-  // Change this to your repo name: e.g. '/splito/' if hosted at username.github.io/splito
-  base: '/',
+  // For GitHub Pages: set this to '/splito/' if your repo is named 'splito'
+  // For Firebase Hosting or a custom domain: keep as '/'
+  base: '/splito/',
   server: {
-    host: true, // Listen on all local IPs
+    // Allow access from your phone on local network
+    host: true,
     headers: {
+      // Allows Google popup auth to work on local network IP
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
-      'Cross-Origin-Embedder-Policy': 'unsafe-none',
+    },
+  },
+  build: {
+    // Split vendor chunks to reduce initial load time
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
     },
   },
 })
