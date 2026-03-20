@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useGlobalData } from '@/hooks/useGlobalData'
 import { useStore } from '@/store/useStore'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { InstallPrompt } from '@/components/InstallPrompt'
@@ -35,6 +36,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   useAuth()
+  useGlobalData()
 
   return (
     // ErrorBoundary wraps everything — catches any unhandled render error

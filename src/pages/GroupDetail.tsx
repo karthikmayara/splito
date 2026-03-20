@@ -104,12 +104,14 @@ export default function GroupDetail() {
 
   // ── Explicitly check access for direct links ──────────────
   useEffect(() => {
-    if (!groupsLoading && !group && groupId) {
+    if (!groupsLoading && !group && groupId && accessState === 'check') {
       checkGroupAccess(groupId).then(status => {
-        setAccessState(status === 'found' ? 'not-found' : status)
+        if (status === 'denied' || status === 'not-found') {
+          setAccessState(status)
+        }
       })
     }
-  }, [groupsLoading, group, groupId])
+  }, [groupsLoading, group, groupId, accessState])
 
   if (groupsLoading || (!group && accessState === 'check')) {
     return (
