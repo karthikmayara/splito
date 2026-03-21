@@ -44,6 +44,10 @@ export const googleProvider = new GoogleAuthProvider()
 // Ask Google for the user's profile + email
 googleProvider.addScope('profile')
 googleProvider.addScope('email')
+// Force account selection popup
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+})
 
 // ── Storage ───────────────────────────────────────────────────
 // Used to store receipt photos

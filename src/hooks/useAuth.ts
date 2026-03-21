@@ -17,8 +17,6 @@ import { useEffect } from 'react'
 import { 
   onAuthStateChanged, 
   signInWithPopup, 
-  signInWithRedirect, 
-  getRedirectResult, 
   signOut as firebaseSignOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -35,12 +33,6 @@ export function useAuth() {
   const { setCurrentUser, setAuthLoading } = useStore()
 
   useEffect(() => {
-    // Handle redirect result from mobile login BEFORE listening for state
-    getRedirectResult(auth).catch((error) => {
-      console.error('Error during redirect sign in:', error)
-      useStore.getState().setError(error.message || 'Error signing in with Google. Please try again.')
-    })
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // User is logged in — fetch or create their Firestore profile
@@ -91,15 +83,9 @@ export function useAuth() {
 // Opens a Google sign-in popup
 // Returns the user or throws an error
 export async function signInWithGoogle(): Promise<void> {
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-  const useRedirect = isMobile && window.location.protocol === 'https:'
-
   try {
-    if (useRedirect) {
-      await signInWithRedirect(auth, googleProvider)
-    } else {
-      await signInWithPopup(auth, googleProvider)
-    }
+    // Rely on signInWithPopup as requested, utilizing the select_account prompt
+    await signInWithPopup(auth, googleProvider)
     // onAuthStateChanged will handle updating the store
   } catch (error: any) {
     // User closed the popup — not a real error
