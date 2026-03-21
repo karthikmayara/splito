@@ -13,7 +13,6 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useStore } from '@/store/useStore'
 import { getGroupByInviteCode, joinGroup } from '@/utils/firestoreService'
-import { signInWithGoogle } from '@/hooks/useAuth'
 import { parseFirebaseError } from '@/utils/errorUtils'
 import type { Group } from '@/types'
 
@@ -113,8 +112,22 @@ export default function JoinGroup() {
 
   // ── Main view: show group info + sign-in prompt ───────────
   return (
-    <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-sm animate-slide-up">
+    <div className="min-h-[100dvh] bg-[#0f172a] flex flex-col items-center px-4 relative">
+      
+      {/* Header with Login/Register */}
+      {!currentUser && (
+        <div className="w-full max-w-5xl mx-auto py-6 flex justify-end">
+          <button 
+            onClick={() => navigate(`/login?returnUrl=/join/${inviteCode}`)}
+            className="text-white font-bold text-sm bg-slate-800 hover:bg-slate-700 px-5 py-2.5 rounded-full transition-colors border border-slate-700"
+          >
+            Login / Register
+          </button>
+        </div>
+      )}
+
+      {/* Main Content Centered */}
+      <div className="w-full max-w-sm animate-slide-up flex-1 flex flex-col justify-center pb-20 mt-10">
 
         {/* App logo */}
         <div className="text-center mb-8">
@@ -123,55 +136,42 @@ export default function JoinGroup() {
         </div>
 
         {/* Invite card */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 mb-6">
-          <p className="text-slate-400 text-sm mb-3">You've been invited to join</p>
-          <h2 className="text-white text-2xl font-semibold mb-1">{group.name}</h2>
+        <div className="bg-slate-800/50 border border-slate-700 shadow-2xl rounded-3xl p-6 mb-6">
+          <p className="text-slate-400 text-sm mb-3 font-medium uppercase tracking-widest">You've been invited to join</p>
+          <h2 className="text-white text-3xl font-bold mb-2 tracking-tight">{group.name}</h2>
           {group.description && (
-            <p className="text-slate-400 text-sm mb-3">{group.description}</p>
+            <p className="text-slate-400 text-sm mb-4 leading-relaxed">{group.description}</p>
           )}
-          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-700">
-            <div className="flex items-center gap-1.5 text-slate-400 text-sm">
-              <span>👥</span>
-              <span>{group.members.length} member{group.members.length !== 1 ? 's' : ''}</span>
+          <div className="flex items-center gap-4 mt-6 pt-6 border-t border-slate-700/50">
+            <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+              <span className="text-lg">👥</span>
+              <span className="text-white font-bold text-sm">{group.members.length}</span>
+              <span className="text-slate-400 text-xs uppercase tracking-wider">members</span>
             </div>
-            <div className="flex items-center gap-1.5 text-slate-400 text-sm">
-              <span>💰</span>
-              <span>{group.currency}</span>
+            <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+              <span className="text-lg">💰</span>
+              <span className="text-white font-bold text-sm">{group.currency}</span>
+              <span className="text-slate-400 text-xs uppercase tracking-wider">currency</span>
             </div>
           </div>
         </div>
 
         {/* Sign in to join */}
         {!currentUser ? (
-          <>
-            <p className="text-slate-400 text-sm text-center mb-4">
-              Sign in to join this group
+          <div className="space-y-3">
+            <p className="text-slate-400 text-sm text-center mb-4 font-medium">
+              Create an account or log in to view expenses and settle up.
             </p>
             <button
-              onClick={async () => {
-                try {
-                  await signInWithGoogle()
-                  // useEffect above will handle the join after auth
-                } catch (err) {
-                  console.error(err)
-                  setError('Sign in failed. Please try again.')
-                }
-              }}
-              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-900 font-medium py-3.5 px-6 rounded-xl transition-colors"
+              onClick={() => navigate(`/login?returnUrl=/join/${inviteCode}`)}
+              className="w-full flex items-center justify-center gap-3 bg-green-500 hover:bg-green-400 text-black font-bold py-4 px-6 rounded-2xl transition-all shadow-xl shadow-green-500/20 active:scale-95"
             >
-              {/* Google logo */}
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-                <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
-                <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-                <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-              </svg>
-              Sign in with Google to join
+              Continue to Login / Register
             </button>
-          </>
+          </div>
         ) : (
           // Logged in but still loading the join
-          <p className="text-center text-slate-400 text-sm">Adding you to the group...</p>
+          <p className="text-center text-slate-400 text-sm font-medium">Adding you to the group...</p>
         )}
       </div>
     </div>

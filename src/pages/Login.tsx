@@ -8,13 +8,16 @@
 // ─────────────────────────────────────────────────────────────
 
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import { useStore } from '@/store/useStore'
 import { signInWithGoogle, signUpWithEmail, loginWithEmail, resetPassword } from '@/hooks/useAuth'
 import { parseFirebaseError } from '@/utils/errorUtils'
 
 export default function Login() {
   const { currentUser, authLoading } = useStore()
+  const [searchParams] = useSearchParams()
+  const returnUrl = searchParams.get('returnUrl') || '/'
+  
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -25,9 +28,9 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  // If already logged in, skip this page entirely
+  // If already logged in, skip this page entirely and navigate to returnUrl
   if (!authLoading && currentUser) {
-    return <Navigate to="/" replace />
+    return <Navigate to={returnUrl} replace />
   }
 
   async function handleGoogleSignIn() {
