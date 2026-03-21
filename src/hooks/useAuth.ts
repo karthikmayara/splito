@@ -39,8 +39,10 @@ export function useAuth() {
         // Google users are always verified — only block email/password signups
         const isGoogleUser = firebaseUser.providerData
           .some(p => p.providerId === 'google.com')
+          
+        const isDevTestAccount = import.meta.env.DEV && firebaseUser.email === import.meta.env.VITE_DEV_EMAIL
 
-        if (!isGoogleUser && !firebaseUser.emailVerified) {
+        if (!isGoogleUser && !firebaseUser.emailVerified && !isDevTestAccount) {
           // Don't load their profile — treat them as logged out
           setCurrentUser(null)
           setAuthLoading(false)

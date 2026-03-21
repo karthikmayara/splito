@@ -71,15 +71,19 @@ export default function Login() {
     setError(null)
     try {
       if (mode === 'signup') {
+        const isDevTestAccount = import.meta.env.DEV && email === import.meta.env.VITE_DEV_EMAIL
         await signUpWithEmail(name, email, password)
-        setVerificationSent(true)
+        if (!isDevTestAccount) {
+          setVerificationSent(true)
+        }
         setIsSigningIn(false)
         return
       } else if (mode === 'login') {
+        const isDevTestAccount = import.meta.env.DEV && email === import.meta.env.VITE_DEV_EMAIL
         await loginWithEmail(email, password)
         // After login, check verification status
         const user = auth.currentUser
-        if (user && !user.emailVerified && !user.providerData.some(p => p.providerId === 'google.com')) {
+        if (user && !user.emailVerified && !user.providerData.some(p => p.providerId === 'google.com') && !isDevTestAccount) {
           await signOut()
           setVerificationSent(true)
           setIsSigningIn(false)
