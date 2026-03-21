@@ -23,6 +23,7 @@ import {
   updateProfile,
   deleteUser,
   sendPasswordResetEmail,
+  sendEmailVerification,
 } from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore'
 import { auth, googleProvider, db } from '@/firebase'
@@ -35,6 +36,17 @@ export function useAuth() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        // Google users are always verified — only block email/password signups
+        const isGoogleUser = firebaseUser.providerData
+          .some(p => p.providerId === 'google.com')
+
+        if (!isGoogleUser && !firebaseUser.emailVerified) {
+          // Don't load their profile — treat them as logged out
+          setCurrentUser(null)
+          setAuthLoading(false)
+          return
+        }
+
         // User is logged in — fetch or create their Firestore profile
         try {
           const userRef = doc(db, 'users', firebaseUser.uid)
@@ -103,6 +115,9 @@ export async function signUpWithEmail(name: string, email: string, pass: string)
   // Set the display name on the Firebase user
   await updateProfile(user, { displayName: name })
   
+  // Send verification email immediately after signup
+  await sendEmailVerification(user)
+  
   // We explicitly overwrite the firestore profile because it might have 
   // been created prematurely by onAuthStateChanged with name="Unknown"
   const userRef = doc(db, 'users', user.uid)
@@ -112,6 +127,13 @@ export async function signUpWithEmail(name: string, email: string, pass: string)
   const store = useStore.getState()
   if (store.currentUser) {
     store.setCurrentUser({ ...store.currentUser, name })
+  }
+}
+
+// Add this new helper — call it from the resend button
+export async function resendVerificationEmail(): Promise<void> {
+  if (auth.currentUser && !auth.currentUser.emailVerified) {
+    await sendEmailVerification(auth.currentUser)
   }
 }
 

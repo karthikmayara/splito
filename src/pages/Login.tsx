@@ -10,7 +10,8 @@
 import { useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import { useStore } from '@/store/useStore'
-import { signInWithGoogle, signUpWithEmail, loginWithEmail, resetPassword } from '@/hooks/useAuth'
+import { auth } from '@/firebase'
+import { signInWithGoogle, signUpWithEmail, loginWithEmail, resetPassword, resendVerificationEmail, signOut } from '@/hooks/useAuth'
 import { parseFirebaseError } from '@/utils/errorUtils'
 
 export default function Login() {
@@ -27,6 +28,10 @@ export default function Login() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  // Verification State
+  const [verificationSent, setVerificationSent] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
 
   // If already logged in, skip this page entirely and navigate to returnUrl
   if (!authLoading && currentUser) {
@@ -60,8 +65,19 @@ export default function Login() {
     try {
       if (mode === 'signup') {
         await signUpWithEmail(name, email, password)
+        setVerificationSent(true)
+        setIsSigningIn(false)
+        return
       } else if (mode === 'login') {
         await loginWithEmail(email, password)
+        // After login, check verification status
+        const user = auth.currentUser
+        if (user && !user.emailVerified && !user.providerData.some(p => p.providerId === 'google.com')) {
+          await signOut()
+          setVerificationSent(true)
+          setIsSigningIn(false)
+          return
+        }
       } else if (mode === 'forgot') {
         await resetPassword(email)
         setError('Password reset email sent! Check your inbox.')
@@ -77,6 +93,98 @@ export default function Login() {
       setError(parseFirebaseError(err))
       setIsSigningIn(false)
     }
+  }
+
+  async function handleResend() {
+    try {
+      await resendVerificationEmail()
+      setResendCooldown(60)
+      const timer = setInterval(() => {
+        setResendCooldown(prev => {
+          if (prev <= 1) { clearInterval(timer); return 0 }
+          return prev - 1
+        })
+      }, 1000)
+    } catch (err: any) {
+      setError(parseFirebaseError(err))
+    }
+  }
+
+  if (verificationSent) {
+    return (
+      <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center px-4">
+        <div className="w-full max-w-sm animate-slide-up text-center">
+          
+          <div className="w-20 h-20 rounded-3xl bg-green-500/10 border border-green-500/20 
+                          flex items-center justify-center mx-auto mb-6">
+            <span className="text-4xl">📧</span>
+          </div>
+
+          <h1 className="text-white text-2xl font-bold mb-2">Check your email</h1>
+          <p className="text-slate-400 text-sm mb-2 leading-relaxed">
+            We sent a verification link to
+          </p>
+          <p className="text-green-400 font-mono text-sm mb-6 break-all">{email}</p>
+
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 mb-6 
+                          text-left space-y-2">
+            {[
+              'Open the email from Splito',
+              'Click the verification link',
+              'Come back here and log in',
+            ].map((step, i) => (
+              <div key={step} className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-green-500/10 border border-green-500/20 
+                                flex items-center justify-center flex-shrink-0">
+                  <span className="text-green-400 text-xs font-bold">{i + 1}</span>
+                </div>
+                <span className="text-slate-300 text-sm">{step}</span>
+              </div>
+            ))}
+          </div>
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 mb-4">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
+          <button
+            onClick={handleResend}
+            disabled={resendCooldown > 0}
+            className="w-full py-3 rounded-xl border border-slate-600 text-slate-300 
+                       hover:bg-slate-800 hover:text-white transition-colors mb-3
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {resendCooldown > 0 
+              ? `Resend in ${resendCooldown}s` 
+              : 'Resend verification email'}
+          </button>
+
+          <button
+            onClick={() => {
+              setVerificationSent(false)
+              setMode('login')
+              setPassword('')
+            }}
+            className="w-full py-3 rounded-xl bg-green-500 hover:bg-green-400 
+                       text-black font-bold transition-colors"
+          >
+            Back to Login
+          </button>
+
+          <p className="text-slate-500 text-xs mt-4">
+            Wrong email?{' '}
+            <button 
+              onClick={() => { setVerificationSent(false); setMode('signup') }}
+              className="text-slate-400 hover:text-white underline"
+            >
+              Sign up again
+            </button>
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (

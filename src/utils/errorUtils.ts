@@ -21,6 +21,9 @@ export function parseFirebaseError(error: any): string {
   if (error.code) {
     switch (error.code) {
       // ── Auth Errors ──
+      case 'auth/email-not-verified':
+        message = 'Please verify your email before logging in. Check your inbox.'
+        break
       case 'auth/invalid-credential':
         message = 'Invalid email or password.'
         break
