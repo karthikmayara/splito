@@ -14,6 +14,7 @@
 
 import { useState } from 'react'
 import { Check, Copy, ChevronRight, X } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { useStore } from '@/store/useStore'
 import { recordSettlement } from '@/utils/firestoreService'
 import { openPaymentLink, buildUpiLink } from '@/utils/paymentLinks'
@@ -34,7 +35,7 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
   const { copy, copied } = useClipboard()
 
   // States for the multi-step payment flow
-  const [step, setStep] = useState<'choose' | 'upi-fallback' | 'confirm'>('choose')
+  const [step, setStep] = useState<'choose' | 'upi-fallback' | 'confirm' | 'upi-qr'>('choose')
   const [recording, setRecording] = useState(false)
 
   const iOwe = currentUser?.id === debt.fromUserId
@@ -43,9 +44,17 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
   const fullAmountStr = (debt.amountCents / 100).toFixed(2)
   const fullAmountFormatted = formatAmount(debt.amountCents, group.currency)
   const hasUpiId = Boolean(otherUser?.upiId)
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent)
 
   const [payAmountStr, setPayAmountStr] = useState(fullAmountStr)
   const payAmountNum = Math.max(0.01, Math.min(debt.amountCents / 100, parseFloat(payAmountStr) || 0))
+
+  const upiIntentLink = hasUpiId ? buildUpiLink({
+    upiId: otherUser!.upiId!,
+    name: otherUser!.name,
+    amountCents: Math.round(payAmountNum * 100),
+    note: `Splito · ${group.name}`,
+  }) : ''
 
   // ── Attempt to open UPI deep link ────────────────────────
   function handleUpiTap() {
@@ -57,22 +66,18 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
       return
     }
 
-    const link = buildUpiLink({
-      upiId: otherUser!.upiId!,
-      name: otherUser!.name,
-      amountCents: Math.round(payAmountNum * 100),
-      note: `Splito · ${group.name}`,
-    })
-
-    // Try to open the UPI app
-    openPaymentLink(link, () => {
-      // App didn't open — show UPI ID for manual entry
-      setStep('upi-fallback')
-    })
-
-    // After attempting to open the app, show "mark as paid" step
-    // User comes back to this screen after paying in their app
-    setTimeout(() => setStep('confirm'), 800)
+    if (isMobile) {
+      // Try to open the UPI app
+      openPaymentLink(upiIntentLink, () => {
+        // App didn't open — show UPI ID for manual entry
+        setStep('upi-fallback')
+      })
+      // After attempting to open the app, show "mark as paid" step
+      setTimeout(() => setStep('confirm'), 800)
+    } else {
+      // Desktop context -> Render QR Code
+      setStep('upi-qr')
+    }
   }
 
   // ── Record the settlement in Firestore ───────────────────
@@ -225,6 +230,47 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
               )}
             </div>
           </>
+        )}
+
+        {/* ── Step: Desktop QR Code ─────────────── */}
+        {step === 'upi-qr' && (
+          <div className="flex flex-col items-center animate-slide-up">
+            <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">📱</span>
+            </div>
+            <h3 className="text-white font-semibold mb-1">Scan to Pay</h3>
+            <p className="text-slate-400 text-sm mb-6 text-center leading-relaxed">
+              Scan this code with PhonePe, <br /> GPay, or any UPI app on your phone.
+            </p>
+            
+            <div className="bg-white p-4 rounded-3xl mb-6 shadow-xl shadow-black/50">
+              <QRCodeSVG value={upiIntentLink} size={180} level="M" />
+            </div>
+            
+            <div className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 mb-6">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-slate-400 text-xs font-medium">Paying {otherUser?.name}</span>
+              </div>
+              <p className="text-white font-mono text-xl tracking-tight">
+                {formatAmount(Math.round(payAmountNum * 100), group.currency)}
+              </p>
+             </div>
+
+            <button
+              onClick={() => handleMarkPaid('upi')}
+              disabled={recording}
+              className="w-full py-3 rounded-xl bg-green-500 hover:bg-green-400 text-black font-bold transition-transform active:scale-95 disabled:opacity-60 mb-2"
+            >
+               {recording ? 'Recording...' : "I've scanned and paid"}
+            </button>
+            
+            <button
+              onClick={() => setStep('choose')}
+              className="w-full py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm font-medium"
+            >
+              Back to options
+            </button>
+          </div>
         )}
 
         {/* ── Step: UPI fallback (manual entry) ──────── */}

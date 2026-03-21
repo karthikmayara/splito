@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Plus, Share2, Search, Filter,
-  Receipt, UserCheck, Copy, Check, Download, Trash2, MessageSquare
+  Receipt, UserCheck, Copy, Check, Download, Trash2, MessageSquare, FileDown
 } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import {
@@ -18,7 +18,7 @@ import {
   formatAmount,
   computeExpenseStatuses,
 } from '@/utils/splitCalculator'
-import { exportGroupToCSV } from '@/utils/exportUtils'
+import { exportGroupToCSV, exportGroupToPDF } from '@/utils/exportUtils'
 import { ExpenseCardSkeleton } from '@/components/Skeletons'
 import {
   buildWhatsAppShareLink,
@@ -259,9 +259,16 @@ export default function GroupDetail() {
 
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <button
+                onClick={() => exportGroupToPDF(group, expenses, usersCache, debts, settlements)}
+                className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700"
+                title="Download PDF Statement"
+              >
+                <FileDown size={18} />
+              </button>
+              <button
                 onClick={() => exportGroupToCSV(group, expenses, usersCache)}
                 className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700"
-                title="Export to CSV"
+                title="Export RAW CSV"
               >
                 <Download size={18} />
               </button>
