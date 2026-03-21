@@ -44,16 +44,13 @@ export function buildUpiLink(options: UpiLinkOptions): string {
   
   const encodedName = encodeURIComponent(name)
 
-  // Some apps require tr (transaction reference) to be unique to safely validate P2P forms
-  const tr = 'SPL' + Date.now().toString()
-
   // Standard UPI deep link format
   // pa = payee address (VPA/UPI ID)
   // pn = payee name
   // am = amount
   // cu = currency
   // tn = transaction note
-  return `upi://pay?pa=${upiId}&pn=${encodedName}&tr=${tr}&am=${amount}&cu=${currency}&tn=${encodedNote}`
+  return `upi://pay?pa=${upiId}&pn=${encodedName}&am=${amount}&cu=${currency}&tn=${encodedNote}`
 }
 
 // ── Venmo Link (US only) ──────────────────────────────────────

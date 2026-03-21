@@ -513,7 +513,7 @@ function MyQRModal({ onClose }: { onClose: () => void }) {
   
   const hasUpi = Boolean(currentUser?.upiId)
   const upiIntentLink = hasUpi
-    ? `upi://pay?pa=${currentUser!.upiId}&pn=${currentUser!.name}&cu=INR`
+    ? `upi://pay?pa=${currentUser!.upiId}&pn=${encodeURIComponent(currentUser!.name)}&cu=INR`
     : ''
 
   return (
