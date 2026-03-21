@@ -17,7 +17,7 @@ import { Check, Copy, ChevronRight, X } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useStore } from '@/store/useStore'
 import { recordSettlement } from '@/utils/firestoreService'
-import { openPaymentLink, buildUpiLink } from '@/utils/paymentLinks'
+import { buildUpiLink } from '@/utils/paymentLinks'
 import { formatAmount } from '@/utils/splitCalculator'
 import { useClipboard } from '@/hooks/useClipboard'
 import { parseFirebaseError } from '@/utils/errorUtils'
@@ -44,7 +44,6 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
   const fullAmountStr = (debt.amountCents / 100).toFixed(2)
   const fullAmountFormatted = formatAmount(debt.amountCents, group.currency)
   const hasUpiId = Boolean(otherUser?.upiId)
-  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent)
 
   const [payAmountStr, setPayAmountStr] = useState(fullAmountStr)
   const payAmountNum = Math.max(0.01, Math.min(debt.amountCents / 100, parseFloat(payAmountStr) || 0))
@@ -66,18 +65,9 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
       return
     }
 
-    if (isMobile) {
-      // Try to open the UPI app
-      openPaymentLink(upiIntentLink, () => {
-        // App didn't open — show UPI ID for manual entry
-        setStep('upi-fallback')
-      })
-      // After attempting to open the app, show "mark as paid" step
-      setTimeout(() => setStep('confirm'), 800)
-    } else {
-      // Desktop context -> Render QR Code
-      setStep('upi-qr')
-    }
+    // P2P intents from browsers are aggressively blocked by PhonePe and GPay (fraud prevention).
+    // Instead of forcing failing intents, we render a robust dual-action QR + Copy view directly.
+    setStep('upi-qr')
   }
 
   // ── Record the settlement in Firestore ───────────────────
@@ -188,7 +178,7 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
                       <p className="text-white text-sm font-medium">Pay via UPI</p>
                       <p className="text-slate-400 text-xs mt-0.5">
                         {hasUpiId
-                          ? 'PhonePe · Google Pay · Paytm · BHIM'
+                          ? 'Scan QR or manually copy UPI ID'
                           : 'UPI ID not set — tap to copy manually'
                         }
                       </p>
@@ -232,48 +222,59 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
           </>
         )}
 
-        {/* ── Step: Desktop QR Code ─────────────── */}
+        {/* ── Step: Desktop/Mobile QR + Copy Code ─────────────── */}
         {step === 'upi-qr' && (
           <div className="flex flex-col items-center animate-slide-up">
-            <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">📱</span>
-            </div>
-            <h3 className="text-white font-semibold mb-1">Scan to Pay</h3>
-            <p className="text-slate-400 text-sm mb-6 text-center leading-relaxed">
-              Scan this code with PhonePe, <br /> GPay, or any UPI app on your phone.
+            <h3 className="text-white font-semibold mb-1">Pay via UPI</h3>
+            <p className="text-slate-400 text-sm mb-5 text-center leading-relaxed">
+              Scan from your payment app, or copy<br/>the UPI ID to pay manually.
             </p>
             
-            <div className="bg-white p-4 rounded-3xl mb-6 shadow-xl shadow-black/50">
+            <div className="bg-white p-4 rounded-3xl mb-5 shadow-xl shadow-black/50">
               <QRCodeSVG value={upiIntentLink} size={180} level="M" />
             </div>
             
-            <div className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 mb-6">
+            <div className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 mb-5">
               <div className="flex justify-between items-center mb-1">
-                <span className="text-slate-400 text-xs font-medium">Paying {otherUser?.name}</span>
+                <span className="text-slate-400 text-xs font-medium">Amount for {otherUser?.name}</span>
               </div>
-              <p className="text-white font-mono text-xl tracking-tight">
+              <p className="text-white font-mono text-xl tracking-tight mb-3">
                 {formatAmount(Math.round(payAmountNum * 100), group.currency)}
               </p>
+              
+              <div className="flex items-center justify-between border-t border-slate-700/50 pt-3">
+                <p className="text-slate-400 text-xs font-medium">UPI ID</p>
+                <div className="flex items-center gap-3">
+                  <p className="text-white font-mono text-xs">{otherUser?.upiId}</p>
+                  <button
+                    onClick={() => copy(otherUser!.upiId!)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-green-400 bg-green-500/10 hover:bg-green-500/20 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    {copied ? <Check size={12} /> : <Copy size={12} />}
+                    {copied ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+              </div>
              </div>
 
             <button
               onClick={() => handleMarkPaid('upi')}
               disabled={recording}
-              className="w-full py-3 rounded-xl bg-green-500 hover:bg-green-400 text-black font-bold transition-transform active:scale-95 disabled:opacity-60 mb-2"
+              className="w-full py-3.5 rounded-xl bg-green-500 hover:bg-green-400 text-black font-bold transition-transform active:scale-95 disabled:opacity-60 mb-2"
             >
-               {recording ? 'Recording...' : "I've scanned and paid"}
+               {recording ? 'Recording...' : "I've paid — Mark as settled"}
             </button>
             
             <button
               onClick={() => setStep('choose')}
-              className="w-full py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm font-medium"
+              className="w-full py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm font-medium pr-1"
             >
               Back to options
             </button>
           </div>
         )}
 
-        {/* ── Step: UPI fallback (manual entry) ──────── */}
+        {/* ── Step: UPI fallback (manual entry for missing ID) ──────── */}
         {step === 'upi-fallback' && (
           <>
             <h3 className="text-white font-semibold mb-1">Pay manually</h3>
