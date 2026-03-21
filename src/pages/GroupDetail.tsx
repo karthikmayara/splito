@@ -148,6 +148,9 @@ export default function GroupDetail() {
     d => d.fromUserId === currentUser?.id || d.toUserId === currentUser?.id
   )
 
+  const iOweDebts = myDebts.filter(d => d.fromUserId === currentUser?.id)
+  const totalIOwe = iOweDebts.reduce((sum, d) => sum + d.amountCents, 0)
+
   const myBalanceSummaryNode = (
     <div className="space-y-2">
       <div className="flex items-center justify-between mb-3 px-1">
@@ -290,6 +293,37 @@ export default function GroupDetail() {
               </button>
             ))}
           </div>
+
+          {/* Mobile "Pay Now" Banner (Sticky) */}
+          {(totalIOwe > 0 && activeTab !== 'balances') && (
+            <div className="md:hidden bg-red-500/10 border-b border-red-500/20 flex items-center justify-between animate-fade-in relative z-20">
+              <div 
+                className="flex-1 px-4 py-2.5 cursor-pointer"
+                onClick={() => {
+                  if (iOweDebts.length === 1) {
+                    setSettleDebt(iOweDebts[0])
+                  } else {
+                    setActiveTab('balances')
+                  }
+                }}
+              >
+                <p className="text-red-400/80 text-[10px] font-bold uppercase tracking-widest">Pending Debt</p>
+                <p className="text-red-400 text-sm font-mono font-bold mt-0.5">{formatAmount(totalIOwe, group.currency)}</p>
+              </div>
+              <button 
+                onClick={() => {
+                  if (iOweDebts.length === 1) {
+                    setSettleDebt(iOweDebts[0])
+                  } else {
+                    setActiveTab('balances')
+                  }
+                }}
+                className="bg-red-500 hover:bg-red-400 active:bg-red-600 text-white text-xs font-bold px-4 py-2 mr-4 rounded-lg shadow-sm transition-colors"
+              >
+                Pay Now
+              </button>
+            </div>
+          )}
           
           {/* Desktop Tabs (Only Expenses & Settled) */}
           <div className="hidden md:flex max-w-4xl mx-auto w-full px-8 pt-2 gap-8">

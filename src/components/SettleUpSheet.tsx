@@ -155,6 +155,17 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
                   </span>
                 )}
               </p>
+              {group.currency === 'INR' && payAmountNum > 100000 && (
+                <div className="mt-3 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                  <p className="text-amber-400 text-xs font-medium flex items-start gap-1.5">
+                    <span>⚠️</span>
+                    <span>
+                      UPI limits are usually capped at <strong>₹1 Lakh</strong> per transaction. 
+                      Amounts higher than this may get rejected by PhonePe, GPay, or your bank.
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-3">

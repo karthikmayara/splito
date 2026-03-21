@@ -37,9 +37,15 @@ export function buildUpiLink(options: UpiLinkOptions): string {
   // Convert cents to decimal: 45050 → "450.50"
   const amount = (amountCents / 100).toFixed(2)
 
-  // URL-encode the note so spaces and special chars work in the link
-  const encodedNote = encodeURIComponent(note)
+  // Many UPI apps (like PhonePe) have unstable parsers for special characters inside deep links.
+  // We strictly strip non-alphanumeric characters from the transaction note to prevent "Add Bank Account" or invalid param errors.
+  const cleanNote = note.replace(/[^a-zA-Z0-9 ]/g, '')
+  const encodedNote = encodeURIComponent(cleanNote)
+  
   const encodedName = encodeURIComponent(name)
+
+  // Some apps require tr (transaction reference) to be unique to safely validate P2P forms
+  const tr = 'SPL' + Date.now().toString()
 
   // Standard UPI deep link format
   // pa = payee address (VPA/UPI ID)
@@ -47,7 +53,7 @@ export function buildUpiLink(options: UpiLinkOptions): string {
   // am = amount
   // cu = currency
   // tn = transaction note
-  return `upi://pay?pa=${upiId}&pn=${encodedName}&am=${amount}&cu=${currency}&tn=${encodedNote}`
+  return `upi://pay?pa=${upiId}&pn=${encodedName}&tr=${tr}&am=${amount}&cu=${currency}&tn=${encodedNote}`
 }
 
 // ── Venmo Link (US only) ──────────────────────────────────────
