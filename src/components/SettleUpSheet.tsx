@@ -86,6 +86,7 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
       onSettled()
     } catch (err) {
       console.error('Failed to record settlement:', err)
+      alert('Failed to record settlement. Please try again.')
       setRecording(false)
     }
   }

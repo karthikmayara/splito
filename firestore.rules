@@ -49,8 +49,8 @@ service cloud.firestore {
     match /settlements/{settlementId} {
       allow read:   if isGroupMember(resource.data.groupId);
       allow create: if isGroupMember(request.resource.data.groupId)
-                    && request.resource.data.fromUserId == request.auth.uid;
-      allow delete: if isAuth() && resource.data.fromUserId == request.auth.uid;
+                    && (request.resource.data.fromUserId == request.auth.uid || request.resource.data.toUserId == request.auth.uid);
+      allow delete: if isAuth() && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
       allow update: if false;
     }
   }
