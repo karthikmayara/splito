@@ -25,6 +25,7 @@ export default function JoinGroup() {
   const [loading, setLoading] = useState(true)
   const [joining, setJoining] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [joinError, setJoinError] = useState<string | null>(null)
 
   // ── Fetch group by invite code ────────────────────────────
   useEffect(() => {
@@ -42,9 +43,29 @@ export default function JoinGroup() {
           setGroup(fetchedGroup)
         }
       })
-      .catch(() => setError('Failed to load group. Check your connection.'))
+      .catch((err: any) => {
+        if (err?.code === 'permission-denied') {
+          setError('Permission denied. Cannot load group data.')
+        } else {
+          setError('Failed to load group. Check your connection.')
+        }
+      })
       .finally(() => setLoading(false))
   }, [inviteCode])
+
+  const handleJoinGroup = () => {
+    if (!currentUser || !group) return
+    
+    setJoinError(null)
+    setJoining(true)
+    joinGroup(group.id, currentUser.id)
+      .then(() => navigate(`/group/${group.id}`, { replace: true }))
+      .catch(err => {
+        console.error(err)
+        setJoinError(parseFirebaseError(err))
+        setJoining(false)
+      })
+  }
 
   // ── Auto-join once user is authenticated ─────────────────
   useEffect(() => {
@@ -57,14 +78,7 @@ export default function JoinGroup() {
     }
 
     // New member — add them and navigate
-    setJoining(true)
-    joinGroup(group.id, currentUser.id)
-      .then(() => navigate(`/group/${group.id}`, { replace: true }))
-      .catch(err => {
-        console.error(err)
-        setError(parseFirebaseError(err))
-        setJoining(false)
-      })
+    handleJoinGroup()
   }, [authLoading, currentUser, group])
 
   // Loading state
@@ -156,7 +170,7 @@ export default function JoinGroup() {
           </div>
         </div>
 
-        {/* Sign in to join */}
+        {/* Sign in to join / Join Status */}
         {!currentUser ? (
           <div className="space-y-3">
             <p className="text-slate-400 text-sm text-center mb-4 font-medium">
@@ -169,9 +183,21 @@ export default function JoinGroup() {
               Continue to Login / Register
             </button>
           </div>
+        ) : joinError ? (
+          <div className="space-y-4">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center">
+              <p className="text-red-400 text-sm font-medium mb-1">Failed to join group</p>
+              <p className="text-red-400/80 text-xs">{joinError}</p>
+            </div>
+            <button
+              onClick={handleJoinGroup}
+              className="w-full flex items-center justify-center gap-3 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3.5 px-6 rounded-xl transition-all active:scale-95"
+            >
+              Retry Joining
+            </button>
+          </div>
         ) : (
-          // Logged in but still loading the join
-          <p className="text-center text-slate-400 text-sm font-medium">Adding you to the group...</p>
+          <p className="text-center text-slate-400 text-sm font-medium animate-pulse">Adding you to the group...</p>
         )}
       </div>
     </div>

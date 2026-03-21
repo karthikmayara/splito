@@ -27,7 +27,8 @@ service cloud.firestore {
     // Works for both collection queries and single doc reads.
     match /groups/{groupId} {
       // Allow anyone possessing the invite code to read the group overview
-      allow read:   if true;
+      allow get: if true;
+      allow list: if true;
       allow create: if isAuth()
                     && request.auth.uid in request.resource.data.members
                     && request.resource.data.createdBy == request.auth.uid;

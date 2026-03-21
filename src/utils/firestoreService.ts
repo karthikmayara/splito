@@ -126,7 +126,7 @@ export function subscribeToUserGroups(
 export async function getGroupByInviteCode(code: string): Promise<Group | null> {
   const q = query(
     collection(db, 'groups'),
-    where('inviteCode', '==', code.toLowerCase())
+    where('inviteCode', '==', code.toLowerCase().trim())
   )
   const snap = await getDocs(q)
   if (snap.empty) return null
