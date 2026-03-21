@@ -11,7 +11,7 @@ export default defineConfig({
   },
   // For GitHub Pages: set this to '/splito/' if your repo is named 'splito'
   // For Firebase Hosting or a custom domain: keep as '/'
-  base: '/splito/',
+  base: '/',
   server: {
     // Allow access from your phone on local network
     host: true,
