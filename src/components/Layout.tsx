@@ -17,11 +17,11 @@ import { GroupCardSkeleton } from '@/components/Skeletons'
 export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
-  
+
   const { currentUser, groups, groupsLoading } = useStore()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
-  
+
   const [allExpenses, setAllExpenses] = useState<Record<string, Expense[]>>({})
   const [allSettlements, setAllSettlements] = useState<Record<string, Settlement[]>>({})
   const [showArchived, setShowArchived] = useState(false)
@@ -67,14 +67,14 @@ export default function Layout() {
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-[#0f172a] text-white selection:bg-green-500/30">
-      
+
       {/* ── Sidebar (Dashboard) ─────────────────────────── */}
       {/* On Mobile: Hidden if NOT on Home. On Desktop: Always Visible (340px) */}
       <div className={`
         ${isHome ? 'flex' : 'hidden'} md:flex
         flex-col w-full md:w-[380px] border-r border-slate-800 bg-[#0f172a]/95 shrink-0 h-full overflow-y-auto custom-scrollbar
       `}>
-        
+
         {/* Header */}
         <header className="sticky top-0 z-10 bg-[#0f172a]/90 backdrop-blur-sm border-b border-slate-800 px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
@@ -98,7 +98,7 @@ export default function Layout() {
         </header>
 
         <div className="px-5 pt-6 pb-24 space-y-8 flex-1">
-          
+
           {/* Net Balance Card */}
           <div className={`
             rounded-3xl p-6 border shadow-lg transition-colors duration-300
@@ -111,9 +111,8 @@ export default function Layout() {
           `}>
             <p className="text-slate-400 text-sm font-medium mb-1.5">Overall balance</p>
             <div className="flex items-end gap-3">
-              <p className={`text-4xl font-bold amount tracking-tight ${
-                isSettled ? 'text-slate-200' : isOwed ? 'text-green-400' : 'text-red-400'
-              }`}>
+              <p className={`text-4xl font-bold amount tracking-tight ${isSettled ? 'text-slate-200' : isOwed ? 'text-green-400' : 'text-red-400'
+                }`}>
                 {formatAmount(Math.abs(netBalance))}
               </p>
             </div>
@@ -122,9 +121,8 @@ export default function Layout() {
                 all settled up 🎉
               </span>
             ) : (
-              <div className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-xs font-medium border ${
-                isOwed ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
-              }`}>
+              <div className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-xs font-medium border ${isOwed ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
+                }`}>
                 {isOwed ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                 <span>{isOwed ? 'you are owed' : 'you owe'}</span>
               </div>
@@ -271,8 +269,8 @@ function GroupCard({
       onClick={onClick}
       className={`
         w-full text-left rounded-2xl p-4 transition-all duration-200 border group
-        ${isActive 
-          ? 'bg-slate-800/80 border-slate-600 shadow-lg shadow-black/20' 
+        ${isActive
+          ? 'bg-slate-800/80 border-slate-600 shadow-lg shadow-black/20'
           : 'bg-slate-800/30 border-slate-800/50 hover:bg-slate-800/50 hover:border-slate-700'}
       `}
     >
@@ -470,7 +468,7 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
       </div>
-      
+
       <div className="mt-4">
         <button onClick={onClose} className="w-full py-3 rounded-xl text-slate-400 hover:text-white font-medium hover:bg-slate-800 transition-colors">Close Profile</button>
       </div>

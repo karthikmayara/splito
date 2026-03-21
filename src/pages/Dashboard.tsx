@@ -67,7 +67,7 @@ export default function Dashboard() {
     return groups.reduce((total, group) => {
       const expenses = allExpenses[group.id] || []
       const settlements = allSettlements[group.id] || []
-      
+
       if (expenses.length === 0 && settlements.length === 0) return total
 
       const debts = minimizeDebts(expenses, group.members, settlements)
@@ -127,9 +127,8 @@ export default function Dashboard() {
         `}>
           <p className="text-slate-400 text-sm mb-1">Overall balance</p>
           <div className="flex items-end gap-3">
-            <p className={`text-4xl font-semibold amount ${
-              isSettled ? 'text-slate-300' : isOwed ? 'text-green-400' : 'text-red-400'
-            }`}>
+            <p className={`text-4xl font-semibold amount ${isSettled ? 'text-slate-300' : isOwed ? 'text-green-400' : 'text-red-400'
+              }`}>
               {formatAmount(Math.abs(netBalance))}
             </p>
             {!isSettled && (
@@ -202,7 +201,7 @@ export default function Dashboard() {
                 </div>
                 {showArchived ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
               </button>
-              
+
               {showArchived && (
                 <div className="mt-3 space-y-3">
                   {archivedGroups.map((group, i) => (
