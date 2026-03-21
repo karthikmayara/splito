@@ -30,7 +30,7 @@ export default function Layout() {
   const archivedGroups = groups.filter(g => g.isArchived)
 
   // Route determining
-  const isHome = location.pathname === '/'
+  const isHome = location.pathname === '/dashboard'
 
   useEffect(() => {
     if (groups.length === 0) return

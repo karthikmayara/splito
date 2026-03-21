@@ -45,7 +45,7 @@ export function InstallPrompt() {
       </div>
       <div className="flex-1 min-w-0">
         <h3 className="text-white font-medium text-sm mb-1">Install Splito App</h3>
-        <p className="text-slate-400 text-xs mb-3">Add to your home screen for quick offline access</p>
+        <p className="text-slate-400 text-xs mb-3">Add to your home screen for quick single-tap access</p>
         <div className="flex gap-2">
           <button
             onClick={handleInstallClick}
