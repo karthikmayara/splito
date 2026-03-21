@@ -173,11 +173,11 @@ export default function AddExpense() {
   const totalCents = parseToCents(amountInput) || 0
 
   return (
-    <div className="h-full bg-[#0f172a] md:bg-transparent overflow-y-auto custom-scrollbar md:flex md:items-center md:justify-center md:p-6 pb-24 md:pb-0">
+    <div className="absolute inset-0 bg-[#0f172a] md:bg-transparent overflow-y-auto custom-scrollbar flex flex-col md:p-6 pb-24 md:pb-0">
       
-      <div className="md:w-full md:max-w-xl md:bg-slate-900/80 md:backdrop-blur-xl md:border md:border-slate-700/50 md:rounded-3xl md:overflow-hidden md:shadow-2xl animate-fade-in relative z-10 w-full min-h-max pb-8 md:pb-0">
+      <div className="flex-none mt-0 md:m-auto w-full md:max-w-xl md:bg-slate-900/80 md:backdrop-blur-xl md:border md:border-slate-700/50 md:rounded-3xl md:overflow-hidden md:shadow-2xl animate-fade-in relative z-10 pb-8 md:pb-0">
         {/* ── Header ──────────────────────────────────────── */}
-        <header className="sticky top-0 z-10 bg-[#0f172a]/90 md:bg-transparent backdrop-blur-sm border-b border-slate-800 md:border-slate-800/60">
+        <header className="sticky top-0 z-20 bg-[#0f172a]/95 md:bg-transparent backdrop-blur-md border-b border-slate-800 md:border-slate-800/60 shadow-sm">
           <div className="max-w-lg mx-auto md:max-w-none px-4 md:px-6 py-4 flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
