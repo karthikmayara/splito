@@ -118,24 +118,25 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Founder Story ── */}
+      {/* ── Scenarios ── */}
       <section className="py-24 px-6 bg-slate-900/50 border-y border-slate-800/50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6 tracking-tight">Built for Indian roommates.</h2>
-          <div className="bg-slate-800/40 border border-slate-700/50 rounded-3xl p-8 md:p-12 text-left relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/5 rounded-full blur-3xl point-events-none"></div>
-            <p className="text-slate-300 mb-6 leading-relaxed relative z-10 text-lg">
-              "I built Splito because I was tired of using expense apps that felt sluggish, pushed premium paywalls, and forced me to manually switch back and forth to PhonePe just to settle a ₹150 chai bill with my flatmates. 
-            </p>
-            <p className="text-slate-300 mb-8 leading-relaxed relative z-10 text-lg">
-              Splito is designed exactly how an expense splitter in India should work: it's perfectly accurate to the paisa, completely free, and natively drops you right into your UPI app to pay with zero friction."
-            </p>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-green-500/20">K</div>
-              <div>
-                <p className="font-bold text-white text-base">Karthik</p>
-                <p className="text-sm text-green-400 font-medium">Creator of Splito</p>
-              </div>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">Perfect for every scenario</h2>
+            <p className="text-slate-400">Splito is flexible enough for any shared expense.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-slate-800/40 border border-slate-700/50 rounded-3xl p-8 hover:bg-slate-800/60 transition-colors">
+              <h3 className="text-xl font-bold mb-3 text-white">🏠 Flatmates</h3>
+              <p className="text-slate-400 leading-relaxed">Split rent, internet, and daily groceries automatically. The debt minimization engine completely eliminates chaotic end-of-month math.</p>
+            </div>
+            <div className="bg-slate-800/40 border border-slate-700/50 rounded-3xl p-8 hover:bg-slate-800/60 transition-colors">
+              <h3 className="text-xl font-bold mb-3 text-white">✈️ Group Trips</h3>
+              <p className="text-slate-400 leading-relaxed">Track flights, hotels, and elaborate dinners across multiple days. Everyone knows exactly who paid for what in real-time.</p>
+            </div>
+            <div className="bg-slate-800/40 border border-slate-700/50 rounded-3xl p-8 hover:bg-slate-800/60 transition-colors">
+              <h3 className="text-xl font-bold mb-3 text-white">☕ Office Teams</h3>
+              <p className="text-slate-400 leading-relaxed">Easily manage the daily chai, shared lunch orders, and split cab rides. Settle up instantly right from your desk inside PhonePe.</p>
             </div>
           </div>
         </div>
