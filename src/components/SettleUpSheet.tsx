@@ -40,8 +40,12 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
   const iOwe = currentUser?.id === debt.fromUserId
   const otherUserId = iOwe ? debt.toUserId : debt.fromUserId
   const otherUser = usersCache[otherUserId]
-  const amount = formatAmount(debt.amountCents, group.currency)
+  const fullAmountStr = (debt.amountCents / 100).toFixed(2)
+  const fullAmountFormatted = formatAmount(debt.amountCents, group.currency)
   const hasUpiId = Boolean(otherUser?.upiId)
+
+  const [payAmountStr, setPayAmountStr] = useState(fullAmountStr)
+  const payAmountNum = Math.max(0.01, Math.min(debt.amountCents / 100, parseFloat(payAmountStr) || 0))
 
   // ── Attempt to open UPI deep link ────────────────────────
   function handleUpiTap() {
@@ -56,7 +60,7 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
     const link = buildUpiLink({
       upiId: otherUser!.upiId!,
       name: otherUser!.name,
-      amountCents: debt.amountCents,
+      amountCents: Math.round(payAmountNum * 100),
       note: `Splito · ${group.name}`,
     })
 
@@ -80,7 +84,7 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
         groupId: group.id,
         fromUserId: debt.fromUserId,
         toUserId: debt.toUserId,
-        amountCents: debt.amountCents,
+        amountCents: Math.round(payAmountNum * 100),
         method,
         note: `Splito · ${group.name}`,
       })
@@ -124,9 +128,33 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
                 </div>
                 <div>
                   <p className="text-white font-semibold">{otherUser?.name || 'Someone'}</p>
-                  <p className="text-green-400 font-mono text-sm">{amount}</p>
                 </div>
               </div>
+            </div>
+
+            {/* Editable Amount for Partial Payments */}
+            <div className="mb-6 bg-slate-800/30 border border-slate-700/50 rounded-2xl p-4">
+              <label className="text-slate-400 text-xs mb-2 block font-medium">Paying Amount</label>
+              <div className="relative flex items-center">
+                <span className="absolute left-4 text-slate-400 font-bold">{group.currency}</span>
+                <input
+                  type="number"
+                  value={payAmountStr}
+                  onChange={e => setPayAmountStr(e.target.value)}
+                  max={fullAmountStr}
+                  min="0.01"
+                  step="0.01"
+                  className="w-full bg-slate-900/50 border border-slate-700 rounded-xl pl-12 pr-4 py-3 text-white font-mono text-xl focus:outline-none focus:border-green-500/50 transition-colors"
+                />
+              </div>
+              <p className="text-slate-400 text-xs mt-3 flex justify-between items-center px-1">
+                <span>Full Balance: <strong className="text-slate-300">{fullAmountFormatted}</strong></span>
+                {Math.round(payAmountNum * 100) < debt.amountCents && (
+                  <span className="text-amber-400/80 font-medium tracking-tight bg-amber-500/10 px-2 py-0.5 rounded">
+                    Partial payment
+                  </span>
+                )}
+              </p>
             </div>
 
             <div className="space-y-3">
@@ -216,15 +244,26 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
                 {/* Amount */}
                 <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
                   <p className="text-slate-400 text-xs mb-1.5">Amount to pay</p>
-                  <p className="text-white font-mono text-lg">{amount}</p>
+                  <p className="text-white font-mono text-lg">{formatAmount(Math.round(payAmountNum * 100), group.currency)}</p>
                 </div>
               </div>
             ) : (
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-4">
-                <p className="text-amber-300 text-sm font-medium mb-1">No UPI ID set</p>
-                <p className="text-amber-300/70 text-xs">
-                  Ask {otherUser?.name} to add their UPI ID in their Splito profile settings.
+                <p className="text-amber-400 text-sm font-medium mb-1 flex items-center gap-1.5">
+                  ⚠️ No UPI ID set
                 </p>
+                <p className="text-amber-400/80 text-xs leading-relaxed">
+                  {otherUser?.name} hasn't set up their UPI ID yet on Splito.
+                </p>
+                <button
+                  onClick={() => {
+                    const msg = `Hey ${otherUser?.name}! Please add your UPI ID on Splito so I can smoothly pay you back ${formatAmount(Math.round(payAmountNum * 100), group.currency)}.`
+                    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
+                  }}
+                  className="mt-3 text-xs w-full text-center font-bold text-amber-900 bg-amber-400 hover:bg-amber-400/90 active:scale-95 px-3 py-2.5 rounded-lg transition-all"
+                >
+                  Tap to remind them on WhatsApp
+                </button>
               </div>
             )}
 
@@ -249,7 +288,7 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
               <h3 className="text-white font-semibold mb-1">Complete payment in your UPI app</h3>
               <p className="text-slate-400 text-sm">
                 Once you've confirmed the payment of{' '}
-                <span className="text-green-400 font-medium amount">{amount}</span>{' '}
+                <span className="text-green-400 font-medium amount">{formatAmount(Math.round(payAmountNum * 100), group.currency)}</span>{' '}
                 in PhonePe / GPay / Paytm, come back here to mark it as settled.
               </p>
             </div>

@@ -148,3 +148,31 @@ export function buildInviteMessage(options: {
     `No app download needed — works in your browser.`
   )
 }
+
+// ── Payment Reminder Builder ──────────────────────────────────
+export function buildPaymentReminder(options: {
+  payerName: string
+  receiverName: string  
+  amount: string
+  groupName: string
+  receiverUpiId?: string
+}): string {
+  const { payerName, amount, groupName, receiverName, receiverUpiId } = options
+  
+  if (receiverUpiId) {
+    return (
+      `Hey ${payerName}! 👋\n\n` +
+      `You owe ${receiverName} *${amount}* for *${groupName}* on Splito.\n\n` +
+      `Pay directly via UPI:\n` +
+      `UPI ID: *${receiverUpiId}*\n\n` +
+      `Or open Splito to pay in one tap 🚀`
+    )
+  }
+  
+  return (
+    `Hey ${payerName}! 👋\n\n` +
+    `Just a reminder — you owe ${receiverName} *${amount}* ` +
+    `for *${groupName}* on Splito.\n\n` +
+    `Open the app to settle up 👇`
+  )
+}

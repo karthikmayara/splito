@@ -24,6 +24,7 @@ import {
   buildWhatsAppShareLink,
   buildSmsShareLink,
   buildInviteMessage,
+  buildPaymentReminder,
 } from '@/utils/paymentLinks'
 import { CATEGORIES } from '@/utils/categories'
 import { ModalOverlay } from '@/pages/Dashboard'
@@ -329,6 +330,19 @@ export default function GroupDetail() {
               {activeTab === 'balances' && (
                 <div className="space-y-8 animate-fade-in">
                   {myBalanceSummaryNode}
+                  
+                  {/* UPI Warning Mobile */}
+                  {!currentUser?.upiId && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-4">
+                      <div className="text-amber-500 text-xl font-bold flex-shrink-0 animate-pulse">!</div>
+                      <div>
+                        <h4 className="text-amber-500 font-bold text-sm tracking-wide">Add your UPI ID</h4>
+                        <p className="text-amber-500/80 text-xs mt-1 leading-relaxed">People can't pay you easily via UPI until you list your UPI ID. You are currently missing out on instant settlements.</p>
+                        <button onClick={() => navigate('/profile')} className="mt-3 text-xs font-bold text-amber-900 bg-amber-500 hover:bg-amber-400 px-4 py-2 rounded-lg transition-colors shadow-lg active:scale-95">Complete Profile</button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="border-t border-slate-800 pt-6 space-y-3">
                     <h3 className="text-white font-semibold px-1">Group Summary</h3>
                     <GroupSummary group={group} expenses={expenses} />
@@ -379,6 +393,18 @@ export default function GroupDetail() {
         <div className="p-8 space-y-10 min-h-full">
           {myBalanceSummaryNode}
           
+          {/* UPI Warning */}
+          {!currentUser?.upiId && (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-4">
+              <div className="text-amber-500 text-xl font-bold flex-shrink-0 animate-pulse">!</div>
+              <div>
+                <h4 className="text-amber-500 font-bold text-sm tracking-wide">Add your UPI ID</h4>
+                <p className="text-amber-500/80 text-xs mt-1 leading-relaxed">People can't pay you easily via UPI until you list your UPI ID. You are currently missing out on instant settlements.</p>
+                <button onClick={() => navigate('/profile')} className="mt-3 text-xs font-bold text-amber-900 bg-amber-500 hover:bg-amber-400 px-4 py-2 rounded-lg transition-colors shadow-lg active:scale-95">Complete Profile</button>
+              </div>
+            </div>
+          )}
+
           <section className="space-y-4">
             <h3 className="text-white font-semibold text-sm uppercase tracking-widest text-slate-400">All Group Balances</h3>
             <BalancesTab debts={debts} group={group} currentUserId={currentUser?.id || ''} onSettle={setSettleDebt} />
@@ -630,6 +656,29 @@ function SettledTab({ settlements, group }: { settlements: Settlement[], group: 
 function BalancesTab({ debts, group, currentUserId, onSettle }: { debts: Debt[], group: Group, currentUserId: string, onSettle: (debt: Debt) => void }) {
   const { usersCache } = useStore()
 
+  const handleRemind = (debt: Debt) => {
+    const lastReminded = localStorage.getItem(`reminded_${debt.fromUserId}_${debt.toUserId}_${group.id}`)
+    if (lastReminded && Date.now() - parseInt(lastReminded, 10) < 24 * 60 * 60 * 1000) {
+      alert("You can only send one reminder every 24 hours to prevent spam.")
+      return
+    }
+
+    const fromUser = usersCache[debt.fromUserId]
+    const toUser = usersCache[debt.toUserId]
+    const amount = formatAmount(debt.amountCents, group.currency)
+
+    const msg = buildPaymentReminder({
+      payerName: fromUser?.name || 'Someone',
+      receiverName: toUser?.id === currentUserId ? 'me' : (toUser?.name || 'Someone'),
+      amount,
+      groupName: group.name,
+      receiverUpiId: toUser?.upiId
+    })
+
+    window.open(buildWhatsAppShareLink(msg), '_blank')
+    localStorage.setItem(`reminded_${debt.fromUserId}_${debt.toUserId}_${group.id}`, Date.now().toString())
+  }
+
   if (debts.length === 0) {
     return (
       <div className="text-center py-10 bg-green-500/5 border border-green-500/10 rounded-3xl">
@@ -701,12 +750,20 @@ function BalancesTab({ debts, group, currentUserId, onSettle }: { debts: Debt[],
                   Pay Now
                 </button>
               ) : (
-                <button
-                  onClick={() => onSettle(debt)}
-                  className="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 hover:border-slate-600 text-xs font-bold px-3 py-2 flex flex-col items-center justify-center rounded-xl transition-colors active:scale-95"
-                >
-                  Settle
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => handleRemind(debt)}
+                    className="flex items-center justify-center gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] text-[10px] font-bold uppercase tracking-wider px-[14px] py-1.5 rounded-lg transition-colors border border-[#25D366]/20"
+                  >
+                    Remind
+                  </button>
+                  <button
+                    onClick={() => onSettle(debt)}
+                    className="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 hover:border-slate-600 text-[11px] font-bold px-3 py-1.5 rounded-lg transition-colors active:scale-95 text-center"
+                  >
+                    Settle
+                  </button>
+                </div>
               )}
             </div>
           </div>
