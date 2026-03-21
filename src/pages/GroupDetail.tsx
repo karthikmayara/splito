@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Plus, Share2, Search, Filter,
-  Receipt, UserCheck, Copy, Check, Download, Trash2
+  Receipt, UserCheck, Copy, Check, Download, Trash2, MessageSquare
 } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import {
@@ -221,10 +221,10 @@ export default function GroupDetail() {
   )
 
   return (
-    <div className="min-h-[100dvh] md:min-h-0 md:h-full bg-[#0f172a] flex flex-col md:flex-row pb-24 md:pb-0 relative text-white selection:bg-green-500/30">
+    <div className="h-full bg-[#0f172a] flex flex-col md:flex-row relative text-white selection:bg-green-500/30 overflow-hidden">
       
       {/* ── LEFT COLUMN (Expenses & Header) ── */}
-      <div className="flex-1 flex flex-col md:h-full md:overflow-hidden relative z-0">
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative z-0">
         
         {/* ── Header ──────────────────────────────────────── */}
         <header className="sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800">
@@ -313,7 +313,7 @@ export default function GroupDetail() {
 
         {/* ── Scrollable Content Area ──────────────────────── */}
         <div className="flex-1 overflow-y-auto custom-scrollbar md:px-0 relative">
-          <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 space-y-8 pb-24">
+          <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6 space-y-8 pb-32 md:pb-24">
             
             {/* Desktop Left Column renders Expenses or Settled */}
             <div className="hidden md:block">
@@ -740,16 +740,18 @@ function InviteModal({ group, inviterName, onClose }: { group: Group, inviterNam
 
       <div className="grid grid-cols-3 gap-3 mb-6">
         <a href={buildWhatsAppShareLink(message)} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 hover:border-[#25D366]/50 rounded-2xl p-4 transition-all active:scale-95">
-          <span className="text-2xl drop-shadow-sm">💬</span>
-          <span className="text-[11px] font-bold text-[#25D366] uppercase tracking-wider">WhatsApp</span>
+          <svg viewBox="0 0 24 24" width="24" height="24" className="text-[#25D366] fill-current drop-shadow-sm">
+            <path d="M12.031 0A12.031 12.031 0 0 0 0 12.031c0 2.126.551 4.186 1.594 6.01L0 24l6.113-1.556A11.967 11.967 0 0 0 12.031 24c6.634 0 12.031-5.397 12.031-12.031S18.665 0 12.031 0Zm6.46 17.265c-.276.772-1.583 1.48-2.185 1.545-.541.066-1.258.121-2.906-.554-1.996-.818-3.235-2.859-3.334-2.993-.099-.133-1.602-2.13-1.602-4.061 0-1.932 1.009-2.887 1.365-3.286.356-.399.771-.497 1.028-.497s.514-.01.742-.01c.228 0 .541-.086.847.66.306.746.99 2.41 1.079 2.585.089.175.148.381.049.58s-.148.324-.306.514c-.148.189-.313.407-.449.524-.148.116-.306.242-.128.549.178.307.791 1.31 1.696 2.115 1.166 1.037 2.146 1.357 2.453 1.503.307.146.488.126.666-.073.178-.199.761-.884.958-1.189.198-.305.396-.254.673-.148.277.106 1.748.824 2.045.972.296.148.494.22.564.343.069.123.069.713-.207 1.48Z"/>
+          </svg>
+          <span className="text-[11px] font-bold text-[#25D366] uppercase tracking-wider mt-1">WhatsApp</span>
         </a>
         <a href={buildSmsShareLink(message)} className="flex flex-col items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 rounded-2xl p-4 transition-all active:scale-95">
-          <span className="text-2xl drop-shadow-sm">📱</span>
-          <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">SMS</span>
+          <MessageSquare size={24} className="text-slate-300 drop-shadow-sm" />
+          <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mt-1">SMS</span>
         </a>
         <button onClick={copyLink} className="flex flex-col items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 rounded-2xl p-4 transition-all active:scale-95">
           {copied ? <Check size={24} className="text-green-400 drop-shadow-sm" /> : <Copy size={24} className="text-slate-300 drop-shadow-sm" />}
-          <span className={`text-[11px] font-bold uppercase tracking-wider ${copied ? 'text-green-400' : 'text-slate-300'}`}>{copied ? 'Copied!' : 'Copy Link'}</span>
+          <span className={`text-[11px] font-bold uppercase tracking-wider mt-1 ${copied ? 'text-green-400' : 'text-slate-300'}`}>{copied ? 'Copied!' : 'Copy Link'}</span>
         </button>
       </div>
 
