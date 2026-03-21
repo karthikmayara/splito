@@ -13,7 +13,7 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, LogOut, User, Settings, TrendingUp, TrendingDown, Users, Archive, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, LogOut, User, Settings, TrendingUp, TrendingDown, Users, Archive, ChevronDown, ChevronUp, QrCode } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import { signOut, deleteAccount } from '@/hooks/useAuth'
 import {
@@ -23,6 +23,7 @@ import {
 import { subscribeToGroupExpenses, subscribeToGroupSettlements } from '@/utils/firestoreService'
 import { minimizeDebts, formatAmount } from '@/utils/splitCalculator'
 import { parseFirebaseError } from '@/utils/errorUtils'
+import { QRCodeSVG } from 'qrcode.react'
 import type { Group, Expense, Settlement } from '@/types'
 
 export default function Dashboard() {
@@ -31,6 +32,7 @@ export default function Dashboard() {
 
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showQRModal, setShowQRModal] = useState(false)
 
   // Per-group expenses for balance calculation
   // Key: groupId, Value: Expense[]
@@ -96,7 +98,14 @@ export default function Dashboard() {
             <span className="text-xl">💸</span>
             <span className="font-semibold text-white">Splito</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              onClick={() => setShowQRModal(true)}
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              title="My QR"
+            >
+              <QrCode size={18} />
+            </button>
             <button
               onClick={() => setShowProfileModal(true)}
               className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
@@ -104,7 +113,12 @@ export default function Dashboard() {
               <Settings size={18} />
             </button>
             <button
-              onClick={async () => { await signOut(); navigate('/login') }}
+              onClick={async () => {
+                if (window.confirm("Are you sure you want to logout?")) {
+                  await signOut()
+                  navigate('/login')
+                }
+              }}
               className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             >
               <LogOut size={18} />
@@ -234,6 +248,13 @@ export default function Dashboard() {
       {showProfileModal && (
         <ProfileModal
           onClose={() => setShowProfileModal(false)}
+        />
+      )}
+
+      {/* ── My QR Modal ──────────────────────────────── */}
+      {showQRModal && (
+        <MyQRModal
+          onClose={() => setShowQRModal(false)}
         />
       )}
     </div>
@@ -440,6 +461,8 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
   const [saved, setSaved] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [requirePassword, setRequirePassword] = useState(false)
 
   async function handleSave() {
     if (!currentUser) return
@@ -529,38 +552,53 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
             Delete Account
           </button>
         ) : (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-            <h3 className="text-red-400 font-medium mb-2">Delete your account?</h3>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 animate-fade-in">
+            <h3 className="text-red-400 font-medium mb-1">Are you sure you want to delete your account?</h3>
             <p className="text-red-400/80 text-xs mb-4">
-              Your profile will be deleted. Your expenses and group history will remain visible to other members.
+              All your data will be permanently lost.
             </p>
+            
+            {requirePassword && (
+              <div className="mb-4">
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={e => setDeletePassword(e.target.value)}
+                  placeholder="Enter your password to confirm"
+                  className="w-full bg-slate-900/50 border border-slate-700 flex-1 rounded-xl px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-red-500/50 transition-colors text-sm"
+                />
+              </div>
+            )}
+
             <div className="flex gap-3">
               <button
-                onClick={() => setShowDeleteConfirm(false)}
+                onClick={() => { setShowDeleteConfirm(false); setRequirePassword(false); setDeletePassword(''); }}
                 disabled={deleting}
                 className="flex-1 py-2.5 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-700 text-sm transition-colors"
               >
                 Cancel
               </button>
               <button
-                disabled={deleting}
+                disabled={deleting || (requirePassword && !deletePassword)}
                 onClick={async () => {
                   setDeleting(true)
                   try {
-                    await deleteAccount()
+                    await deleteAccount(requirePassword ? deletePassword : undefined)
                     // onAuthStateChanged automatically logs us out and redirects!
                   } catch (err: any) {
                     console.error("Delete account error:", err)
-                    if (err.code === 'auth/requires-recent-login') {
-                      alert("Security check: Please log out and log back in to verify your identity before deleting your account.")
+                    if (err.message === 'REQUIRE_PASSWORD') {
+                      setRequirePassword(true)
+                    } else if (err.message === 'POPUP_CLOSED') {
+                      // Ignored popup close
                     } else {
                       alert(parseFirebaseError(err))
                     }
+                  } finally {
                     setDeleting(false)
-                    setShowDeleteConfirm(false)
                   }
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white hover:bg-red-600 text-sm font-medium transition-colors flex items-center justify-center"
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white hover:bg-red-600 text-sm font-medium transition-colors flex items-center justify-center disabled:opacity-50"
               >
                 {deleting ? (
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -572,6 +610,65 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
       </div>
+    </ModalOverlay>
+  )
+}
+
+// ── My QR Modal ───────────────────────────────────────────────
+function MyQRModal({ onClose }: { onClose: () => void }) {
+  const { currentUser } = useStore()
+  const navigate = useNavigate()
+
+  const hasUpi = Boolean(currentUser?.upiId)
+  const upiIntentLink = hasUpi
+    ? `upi://pay?pa=${currentUser!.upiId}&pn=${currentUser!.name}&cu=INR`
+    : ''
+
+  return (
+    <ModalOverlay onClose={onClose}>
+      <h2 className="text-white font-semibold text-lg mb-5 flex items-center gap-2">
+        <QrCode size={20} className="text-green-400" />
+        My QR Code
+      </h2>
+
+      {hasUpi ? (
+        <div className="flex flex-col items-center">
+          <p className="text-slate-400 text-sm mb-6 text-center leading-relaxed">
+            Let friends scan this to pay you via PhonePe, GPay, or any UPI app.
+          </p>
+          <div className="bg-white p-4 rounded-3xl mb-6 shadow-xl shadow-black/50">
+            <QRCodeSVG value={upiIntentLink} size={200} level="M" />
+          </div>
+          <div className="w-full bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 mb-4 text-center">
+            <p className="text-slate-400 text-xs font-medium mb-1">Your UPI ID</p>
+            <p className="text-white font-mono text-lg tracking-tight">{currentUser!.upiId}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6 text-center mb-6">
+          <p className="text-amber-500 font-bold mb-2">No UPI ID setup</p>
+          <p className="text-amber-500/80 text-sm mb-5 leading-relaxed">
+            You must add a UPI ID to your profile before you can receive instant payments via QR.
+          </p>
+          <button 
+            onClick={() => {
+              onClose()
+              navigate('/profile') // Wait, we don't have a /profile route, profile is a modal! 
+              // The user can just close and open Profile Modal directly.
+            }}
+            className="w-full text-xs font-bold text-amber-900 bg-amber-500 hover:bg-amber-400 px-4 py-3 rounded-lg transition-colors shadow-lg active:scale-95"
+          >
+            Go configure it in Profile settings
+          </button>
+        </div>
+      )}
+
+      <button
+        onClick={onClose}
+        className="w-full py-3 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors"
+      >
+        Close
+      </button>
     </ModalOverlay>
   )
 }

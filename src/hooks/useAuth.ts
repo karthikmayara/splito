@@ -21,9 +21,12 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
-  deleteUser,
   sendPasswordResetEmail,
   sendEmailVerification,
+  reauthenticateWithPopup,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  deleteUser
 } from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore'
 import { auth, googleProvider, db } from '@/firebase'
@@ -155,14 +158,53 @@ export async function signOut(): Promise<void> {
 
 // ── Delete Account ────────────────────────────────────────────
 // Fulfills DPDP Act 2023 compliance.
-export async function deleteAccount(): Promise<void> {
+export async function deleteAccount(password?: string): Promise<void> {
   if (!auth.currentUser) return
   const uid = auth.currentUser.uid
+
+  if (password) {
+    const credential = EmailAuthProvider.credential(auth.currentUser.email!, password)
+    await reauthenticateWithCredential(auth.currentUser, credential)
+  }
+
+  const userRef = doc(db, 'users', uid)
+  const userSnap = await getDoc(userRef)
+  const userData = userSnap.data()
   
-  // 1. Delete Firestore user document FIRST.
-  // Once the Auth account is deleted, security rules will block this.
-  await deleteDoc(doc(db, 'users', uid))
-  
-  // 2. Delete the actual Authentication credential.
-  await deleteUser(auth.currentUser)
+  try {
+    // 1. Delete Firestore user document FIRST.
+    // Once the Auth account is deleted, security rules will block this.
+    await deleteDoc(userRef)
+    
+    // 2. Delete the actual Authentication credential.
+    await deleteUser(auth.currentUser)
+  } catch (err: any) {
+    // Graceful restore of the document if deleteUser strictly fails
+    if (userData) {
+      await setDoc(userRef, userData)
+    }
+
+    if (err.code === 'auth/requires-recent-login') {
+      const isGoogleUser = auth.currentUser?.providerData.some(p => p.providerId === 'google.com')
+      if (isGoogleUser && auth.currentUser) {
+        // Re-auth transparently with popup
+        try {
+          await reauthenticateWithPopup(auth.currentUser, googleProvider)
+          // Retry deletion
+          await deleteDoc(userRef)
+          await deleteUser(auth.currentUser)
+          return
+        } catch (popupErr: any) {
+             if (popupErr.code === 'auth/popup-closed-by-user') {
+                 throw new Error('POPUP_CLOSED')
+             }
+             throw popupErr
+        }
+      } else {
+        // It's an email/password user, throw a custom error to tell UI to ask for password.
+        throw new Error('REQUIRE_PASSWORD')
+      }
+    }
+    throw err
+  }
 }
