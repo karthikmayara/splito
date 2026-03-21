@@ -17,7 +17,7 @@ import { Check, Copy, ChevronRight, X } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useStore } from '@/store/useStore'
 import { recordSettlement } from '@/utils/firestoreService'
-import { buildUpiLink } from '@/utils/paymentLinks'
+import { openPaymentLink, buildUpiLink } from '@/utils/paymentLinks'
 import { formatAmount } from '@/utils/splitCalculator'
 import { useClipboard } from '@/hooks/useClipboard'
 import { parseFirebaseError } from '@/utils/errorUtils'
@@ -44,6 +44,7 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
   const fullAmountStr = (debt.amountCents / 100).toFixed(2)
   const fullAmountFormatted = formatAmount(debt.amountCents, group.currency)
   const hasUpiId = Boolean(otherUser?.upiId)
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent)
 
   const [payAmountStr, setPayAmountStr] = useState(fullAmountStr)
   const payAmountNum = Math.max(0.01, Math.min(debt.amountCents / 100, parseFloat(payAmountStr) || 0))
@@ -65,9 +66,19 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
       return
     }
 
-    // P2P intents from browsers are aggressively blocked by PhonePe and GPay (fraud prevention).
-    // Instead of forcing failing intents, we render a robust dual-action QR + Copy view directly.
-    setStep('upi-qr')
+    if (isMobile) {
+      // Try to open the UPI app natively!
+      // Powered by our ultra-pristine parameter payload to bypass intent failure
+      openPaymentLink(upiIntentLink, () => {
+        // App didn't open — show dual-intent QR fallback
+        setStep('upi-qr')
+      })
+      // Give the user a prompt to explicitly confirm they completed the native app flow
+      setTimeout(() => setStep('confirm'), 800)
+    } else {
+      // Desktop context -> Render QR Code
+      setStep('upi-qr')
+    }
   }
 
   // ── Record the settlement in Firestore ───────────────────
@@ -178,7 +189,7 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
                       <p className="text-white text-sm font-medium">Pay via UPI</p>
                       <p className="text-slate-400 text-xs mt-0.5">
                         {hasUpiId
-                          ? 'Scan QR or manually copy UPI ID'
+                          ? 'PhonePe · Google Pay · Paytm · BHIM'
                           : 'UPI ID not set — tap to copy manually'
                         }
                       </p>

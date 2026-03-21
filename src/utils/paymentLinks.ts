@@ -20,37 +20,32 @@
 interface UpiLinkOptions {
   upiId: string      // receiver's UPI VPA e.g. "rahul@ybl" or "9876543210@paytm"
   name: string       // receiver's display name
-  amountCents: number
+  amountCents?: number
   note?: string      // transaction note e.g. "Dinner split - June"
-  currency?: string  // defaults to INR
 }
 
 export function buildUpiLink(options: UpiLinkOptions): string {
-  const {
-    upiId,
-    name,
-    amountCents,
-    note = 'Splito expense',
-    currency = 'INR',
-  } = options
+  const { upiId, name, amountCents, note } = options
 
-  // Convert cents to decimal: 45050 → "450.50"
-  const amount = (amountCents / 100).toFixed(2)
+  // Standard UPI deep link format - MINIMALIST
+  // We keep the payload as absolutely barebones as possible.
+  // Many strict UPI apps (like PhonePe) flag transactions as "security risks" 
+  // if they observe malformed transaction notes or unnecessary merchant parameters on unverified P2P intents.
+  let link = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}`
 
-  // Many UPI apps (like PhonePe) have unstable parsers for special characters inside deep links.
-  // We strictly strip non-alphanumeric characters from the transaction note to prevent "Add Bank Account" or invalid param errors.
-  const cleanNote = note.replace(/[^a-zA-Z0-9 ]/g, '')
-  const encodedNote = encodeURIComponent(cleanNote)
-  
-  const encodedName = encodeURIComponent(name)
+  if (amountCents !== undefined && amountCents > 0) {
+    link += `&am=${(amountCents / 100).toFixed(2)}`
+  }
 
-  // Standard UPI deep link format
-  // pa = payee address (VPA/UPI ID)
-  // pn = payee name
-  // am = amount
-  // cu = currency
-  // tn = transaction note
-  return `upi://pay?pa=${upiId}&pn=${encodedName}&am=${amount}&cu=${currency}&tn=${encodedNote}`
+  if (note) {
+    // Aggressively clean the note: alphanumeric only, squashing consecutive spaces to a single space
+    const cleanNote = note.replace(/[^a-zA-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim()
+    if (cleanNote) {
+      link += `&tn=${encodeURIComponent(cleanNote)}`
+    }
+  }
+
+  return link
 }
 
 // ── Venmo Link (US only) ──────────────────────────────────────
