@@ -118,35 +118,23 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
-      <section className="py-24 px-6 bg-slate-900/50 border-t border-slate-800/50">
-        <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-12 tracking-tight">Built by roommates, for roommates.</h2>
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <div className="bg-slate-800/40 border border-slate-700/50 rounded-3xl p-8 text-left relative">
-              <span className="text-4xl text-green-500/20 absolute top-4 right-6 uppercase font-serif">"</span>
-              <p className="text-slate-300 mb-6 leading-relaxed relative z-10">
-                "We ditched Splitwise entirely. Splito makes rent and internet splitting trivial because the UPI link opens PhonePe immediately. No more chasing friends for their numbers."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">K</div>
-                <div>
-                  <p className="font-semibold text-sm">Karthik M.</p>
-                  <p className="text-xs text-slate-500 p-0 m-0">Bangalore, India</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-slate-800/40 border border-slate-700/50 rounded-3xl p-8 text-left relative md:translate-y-8">
-              <span className="text-4xl text-green-500/20 absolute top-4 right-6 uppercase font-serif">"</span>
-              <p className="text-slate-300 mb-6 leading-relaxed relative z-10">
-                "Not having to download an app is huge. I send a WhatsApp link to my flatmates, they click it, add their expense on Safari, and they are done. Beautiful UI too."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400 font-bold">S</div>
-                <div>
-                  <p className="font-semibold text-sm">Siddanth R.</p>
-                  <p className="text-xs text-slate-500 p-0 m-0">Mumbai, India</p>
-                </div>
+      {/* ── Founder Story ── */}
+      <section className="py-24 px-6 bg-slate-900/50 border-y border-slate-800/50">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-6 tracking-tight">Built for Indian roommates.</h2>
+          <div className="bg-slate-800/40 border border-slate-700/50 rounded-3xl p-8 md:p-12 text-left relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/5 rounded-full blur-3xl point-events-none"></div>
+            <p className="text-slate-300 mb-6 leading-relaxed relative z-10 text-lg">
+              "I built Splito because I was tired of using expense apps that felt sluggish, pushed premium paywalls, and forced me to manually switch back and forth to PhonePe just to settle a ₹150 chai bill with my flatmates. 
+            </p>
+            <p className="text-slate-300 mb-8 leading-relaxed relative z-10 text-lg">
+              Splito is designed exactly how an expense splitter in India should work: it's perfectly accurate to the paisa, completely free, and natively drops you right into your UPI app to pay with zero friction."
+            </p>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-green-500/20">K</div>
+              <div>
+                <p className="font-bold text-white text-base">Karthik</p>
+                <p className="text-sm text-green-400 font-medium">Creator of Splito</p>
               </div>
             </div>
           </div>
