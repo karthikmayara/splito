@@ -34,7 +34,7 @@ import { GroupSummary } from '@/components/GroupSummary'
 import { parseFirebaseError } from '@/utils/errorUtils'
 import type { Expense, Debt, Group, Settlement } from '@/types'
 
-const APP_URL = window.location.origin
+const APP_URL = window.location.href.split('#')[0].replace(/\/$/, '') + '/#'
 
 export default function GroupDetail() {
   const { groupId } = useParams<{ groupId: string }>()
