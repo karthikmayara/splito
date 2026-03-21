@@ -22,6 +22,7 @@ import {
 } from '@/utils/firestoreService'
 import { subscribeToGroupExpenses, subscribeToGroupSettlements } from '@/utils/firestoreService'
 import { minimizeDebts, formatAmount } from '@/utils/splitCalculator'
+import { parseFirebaseError } from '@/utils/errorUtils'
 import type { Group, Expense, Settlement } from '@/types'
 
 export default function Dashboard() {
@@ -156,10 +157,21 @@ export default function Dashboard() {
 
           {activeGroups.length === 0 ? (
             // Empty state
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 text-center">
-              <div className="text-4xl mb-3">🏠</div>
-              <p className="text-white font-medium mb-1">No active groups yet</p>
-              <p className="text-slate-400 text-sm">Create a group to start splitting expenses with your roommates</p>
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-10 text-center flex flex-col items-center justify-center min-h-[300px]">
+              <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mb-5 border border-green-500/20">
+                <span className="text-4xl translate-x-1">🚀</span>
+              </div>
+              <h3 className="text-white font-semibold text-lg mb-2">Welcome to Splito!</h3>
+              <p className="text-slate-400 text-sm mb-6 max-w-xs">
+                You're not part of any active groups. Create your first group to start splitting expenses easily.
+              </p>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-green-500 hover:bg-green-400 active:bg-green-600 text-black font-medium py-3 px-6 rounded-xl transition-colors shadow-lg shadow-green-500/20 flex items-center gap-2"
+              >
+                <Plus size={18} />
+                Create your first group
+              </button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -350,7 +362,7 @@ function CreateGroupModal({
       navigate(`/group/${group.id}`)
     } catch (err) {
       console.error(err)
-      setError('Failed to create group. Please try again.')
+      setError(parseFirebaseError(err))
       setLoading(false)
     }
   }
@@ -453,6 +465,7 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
       setTimeout(() => setSaved(false), 2000)
     } catch (err) {
       console.error(err)
+      alert(parseFirebaseError(err))
     } finally {
       setSaving(false)
     }
@@ -542,7 +555,7 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
                     if (err.code === 'auth/requires-recent-login') {
                       alert("Security check: Please log out and log back in to verify your identity before deleting your account.")
                     } else {
-                      alert("Failed to delete account. Please try again.")
+                      alert(parseFirebaseError(err))
                     }
                     setDeleting(false)
                     setShowDeleteConfirm(false)

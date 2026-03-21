@@ -16,9 +16,10 @@ import { useState } from 'react'
 import { Check, Copy, ChevronRight, X } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import { recordSettlement } from '@/utils/firestoreService'
-import { buildUpiLink, openPaymentLink } from '@/utils/paymentLinks'
+import { openPaymentLink, buildUpiLink } from '@/utils/paymentLinks'
 import { formatAmount } from '@/utils/splitCalculator'
 import { useClipboard } from '@/hooks/useClipboard'
+import { parseFirebaseError } from '@/utils/errorUtils'
 import type { Debt, Group } from '@/types'
 
 interface SettleUpSheetProps {
@@ -86,7 +87,7 @@ export function SettleUpSheet({ debt, group, onClose, onSettled }: SettleUpSheet
       onSettled()
     } catch (err) {
       console.error('Failed to record settlement:', err)
-      alert('Failed to record settlement. Please try again.')
+      alert(parseFirebaseError(err))
       setRecording(false)
     }
   }

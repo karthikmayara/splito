@@ -24,6 +24,7 @@ interface ExpenseCardProps {
 }
 
 import { CATEGORY_ICONS } from '@/utils/categories'
+import { parseFirebaseError } from '@/utils/errorUtils'
 
 export function ExpenseCard({ expense, group, currentUserId, status }: ExpenseCardProps) {
   const navigate = useNavigate()
@@ -45,6 +46,7 @@ export function ExpenseCard({ expense, group, currentUserId, status }: ExpenseCa
       // Firestore listener automatically removes card
     } catch (err) {
       console.error('Failed to delete expense:', err)
+      alert(parseFirebaseError(err))
       setDeleting(false)
       setShowDeleteModal(false)
     }

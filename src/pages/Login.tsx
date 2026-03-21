@@ -11,6 +11,7 @@ import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useStore } from '@/store/useStore'
 import { signInWithGoogle, signUpWithEmail, loginWithEmail, resetPassword } from '@/hooks/useAuth'
+import { parseFirebaseError } from '@/utils/errorUtils'
 
 export default function Login() {
   const { currentUser, authLoading } = useStore()
@@ -37,7 +38,7 @@ export default function Login() {
     } catch (err: any) {
       console.error('Auth error code:', err.code)
       console.error('Auth error message:', err.message)
-      setError(err.message || 'Sign in failed. Please try again.')
+      setError(parseFirebaseError(err))
       setIsSigningIn(false)
     }
   }
@@ -65,16 +66,12 @@ export default function Login() {
         setMode('login')
         return
       }
+      // Success—stop loading so button doesn't freeze before redirect
+      setIsSigningIn(false)
     } catch (err: any) {
       console.error('Auth error code:', err.code)
       console.error('Auth error message:', err.message)
-      
-      let msg = err.message
-      if (err.code === 'auth/invalid-credential') msg = 'Invalid email or password.'
-      if (err.code === 'auth/email-already-in-use') msg = 'Email is already registered.'
-      if (err.code === 'auth/weak-password') msg = 'Password should be at least 6 characters.'
-      
-      setError(msg || 'Sign in failed. Please try again.')
+      setError(parseFirebaseError(err))
       setIsSigningIn(false)
     }
   }

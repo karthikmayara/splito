@@ -38,14 +38,7 @@ export function useAuth() {
     // Handle redirect result from mobile login BEFORE listening for state
     getRedirectResult(auth).catch((error) => {
       console.error('Error during redirect sign in:', error)
-    })
-
-    // onAuthStateChanged fires immediately with the current user
-    // (or null if not logged in), and again whenever auth changes.
-    // It returns an unsubscribe function we call on cleanup.
-    // Handle redirect result from mobile login
-    getRedirectResult(auth).catch((error) => {
-      console.error('Error during redirect sign in:', error)
+      useStore.getState().setError(error.message || 'Error signing in with Google. Please try again.')
     })
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -69,8 +62,16 @@ export function useAuth() {
             await setDoc(userRef, { ...newUser, createdAt: serverTimestamp() })
             setCurrentUser({ id: firebaseUser.uid, ...newUser })
           }
-        } catch (error) {
-          console.error('Error fetching user profile:', error)
+        } catch (error: any) {
+          console.error('Error fetching/creating user profile:', error)
+          useStore.getState().setError('Failed to load user profile. Please check your connection.')
+          // Graceful fallback: set local user so they aren't completely blocked
+          setCurrentUser({
+            id: firebaseUser.uid,
+            name: firebaseUser.displayName || 'Unknown',
+            email: firebaseUser.email || '',
+            createdAt: Date.now(),
+          })
         }
       } else {
         // User is logged out

@@ -14,6 +14,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useStore } from '@/store/useStore'
 import { getGroupByInviteCode, joinGroup } from '@/utils/firestoreService'
 import { signInWithGoogle } from '@/hooks/useAuth'
+import { parseFirebaseError } from '@/utils/errorUtils'
 import type { Group } from '@/types'
 
 export default function JoinGroup() {
@@ -62,7 +63,7 @@ export default function JoinGroup() {
       .then(() => navigate(`/group/${group.id}`, { replace: true }))
       .catch(err => {
         console.error(err)
-        setError('Failed to join group. Please try again.')
+        setError(parseFirebaseError(err))
         setJoining(false)
       })
   }, [authLoading, currentUser, group])

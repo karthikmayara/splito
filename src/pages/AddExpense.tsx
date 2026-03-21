@@ -23,6 +23,7 @@ import {
   formatAmount,
 } from '@/utils/splitCalculator'
 import { CATEGORIES, CATEGORY_ICONS, guessCategory } from '@/utils/categories'
+import { parseFirebaseError } from '@/utils/errorUtils'
 import type { SplitType, Split, ExpenseCategory } from '@/types'
 
 export default function AddExpense() {
@@ -163,7 +164,7 @@ export default function AddExpense() {
       navigate(`/group/${groupId}`)
     } catch (err) {
       console.error(err)
-      setErrors({ general: 'Failed to save. Please try again.' })
+      setErrors({ general: parseFirebaseError(err) })
       setSaving(false)
     }
   }
@@ -172,22 +173,23 @@ export default function AddExpense() {
   const totalCents = parseToCents(amountInput) || 0
 
   return (
-    <div className="min-h-screen bg-[#0f172a] pb-24">
+    <div className="min-h-[100dvh] md:min-h-0 md:h-full bg-[#0f172a] md:bg-transparent pb-24 md:pb-0 md:overflow-y-auto custom-scrollbar md:flex md:items-center md:justify-center md:p-6">
+      
+      <div className="md:w-full md:max-w-xl md:bg-slate-900/80 md:backdrop-blur-xl md:border md:border-slate-700/50 md:rounded-3xl md:overflow-hidden md:shadow-2xl animate-fade-in">
+        {/* ── Header ──────────────────────────────────────── */}
+        <header className="sticky top-0 z-10 bg-[#0f172a]/90 md:bg-transparent backdrop-blur-sm border-b border-slate-800 md:border-slate-800/60">
+          <div className="max-w-lg mx-auto md:max-w-none px-4 md:px-6 py-4 flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 -ml-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h1 className="text-white font-semibold text-lg tracking-tight">Add expense</h1>
+          </div>
+        </header>
 
-      {/* ── Header ──────────────────────────────────────── */}
-      <header className="sticky top-0 z-10 bg-[#0f172a]/90 backdrop-blur-sm border-b border-slate-800">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <h1 className="text-white font-semibold">Add expense</h1>
-        </div>
-      </header>
-
-      <div className="max-w-lg mx-auto px-4 pt-5 space-y-5">
+        <div className="max-w-lg mx-auto md:max-w-none px-4 md:px-6 py-6 space-y-6">
 
         {/* ── Title ────────────────────────────────────── */}
         <div>
@@ -464,7 +466,7 @@ export default function AddExpense() {
           onClick={handleSave}
           disabled={saving}
           className="
-            w-full py-4 rounded-2xl
+            w-full py-4 mt-2 rounded-2xl
             bg-green-500 hover:bg-green-400 active:scale-[0.98]
             text-black font-semibold text-base
             transition-all duration-150
@@ -474,6 +476,7 @@ export default function AddExpense() {
         >
           {saving ? 'Saving...' : 'Save expense'}
         </button>
+        </div>
       </div>
     </div>
   )

@@ -3,6 +3,7 @@ import { Trash2, ArrowRight, AlertTriangle, X } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import { deleteSettlement } from '@/utils/firestoreService'
 import { formatAmount } from '@/utils/splitCalculator'
+import { parseFirebaseError } from '@/utils/errorUtils'
 import type { Settlement, Group } from '@/types'
 
 interface SettlementCardProps {
@@ -27,6 +28,7 @@ export function SettlementCard({ settlement, group }: SettlementCardProps) {
       await deleteSettlement(settlement.id)
     } catch (err) {
       console.error('Failed to delete settlement:', err)
+      alert(parseFirebaseError(err))
       setDeleting(false)
       setShowDeleteModal(false)
     }
